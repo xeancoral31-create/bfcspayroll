@@ -32,7 +32,7 @@ export default function Employees() {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<Omit<Employee, "id">>(emptyForm);
 
   const filtered = employees.filter(
     (e) =>
