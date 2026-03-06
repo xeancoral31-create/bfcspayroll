@@ -15,7 +15,7 @@ import { toast } from "sonner";
 const departments = ["Administration", "Academics", "Finance", "Maintenance"];
 const fmt = (n: number) => "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
-const emptyForm = {
+const emptyForm: Omit<Employee, "id"> = {
   employeeId: "",
   firstName: "",
   lastName: "",
@@ -24,7 +24,7 @@ const emptyForm = {
   department: "Academics",
   basicSalary: 0,
   dateHired: new Date().toISOString().slice(0, 10),
-  status: "active" as const,
+  status: "active",
 };
 
 export default function Employees() {
