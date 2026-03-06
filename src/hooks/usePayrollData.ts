@@ -94,6 +94,34 @@ export function usePayrollRecords() {
     []
   );
 
+  const processPayrollManual = useCallback(
+    (employee: Employee, period: string, allowances = 0, overtime = 0, manualDeductions: { name: string; amount: number; type: "fixed" }[]) => {
+      const grossPay = employee.basicSalary + allowances + overtime;
+      const totalDeductions = manualDeductions.reduce((sum, d) => sum + d.amount, 0);
+      const netPay = grossPay - totalDeductions;
+
+      const record: PayrollRecord = {
+        id: crypto.randomUUID(),
+        employeeId: employee.id,
+        employee,
+        period,
+        basicSalary: employee.basicSalary,
+        allowances,
+        overtime,
+        grossPay,
+        deductions: manualDeductions,
+        totalDeductions: Math.round(totalDeductions * 100) / 100,
+        netPay: Math.round(netPay * 100) / 100,
+        status: "processed",
+        createdAt: new Date().toISOString(),
+      };
+
+      setRecords((prev) => [...prev, record]);
+      return record;
+    },
+    []
+  );
+
   const markAsPaid = useCallback((id: string) => {
     setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, status: "paid" as const } : r)));
   }, []);
@@ -102,5 +130,5 @@ export function usePayrollRecords() {
     setRecords((prev) => prev.filter((r) => r.id !== id));
   }, []);
 
-  return { records, processPayroll, markAsPaid, deleteRecord };
+  return { records, processPayroll, processPayrollManual, markAsPaid, deleteRecord };
 }
