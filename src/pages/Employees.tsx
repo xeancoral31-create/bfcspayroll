@@ -47,7 +47,7 @@ export default function Employees() {
 
   const openEdit = (e: Employee) => {
     setEditId(e.id);
-    setForm({ ...e });
+    setForm({ ...e } as Omit<Employee, "id"> & { id?: string });
     setDialogOpen(true);
   };
 
