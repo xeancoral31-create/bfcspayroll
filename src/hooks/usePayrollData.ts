@@ -130,5 +130,5 @@ export function usePayrollRecords() {
     setRecords((prev) => prev.filter((r) => r.id !== id));
   }, []);
 
-  return { records, processPayroll, markAsPaid, deleteRecord };
+  return { records, processPayroll, processPayrollManual, markAsPaid, deleteRecord };
 }
