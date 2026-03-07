@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import Employees from "@/pages/Employees";
 import Payroll from "@/pages/Payroll";
 import Payslips from "@/pages/Payslips";
+import Reports from "@/pages/Reports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/employees" element={<Employees />} />
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/payslips" element={<Payslips />} />
+            <Route path="/reports" element={<Reports />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>

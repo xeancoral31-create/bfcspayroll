@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Calculator, FileText, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, Calculator, FileText, BarChart3, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { to: "/employees", label: "Employees", icon: Users },
   { to: "/payroll", label: "Run Payroll", icon: Calculator },
   { to: "/payslips", label: "Payslips", icon: FileText },
+  { to: "/reports", label: "Reports", icon: BarChart3 },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
