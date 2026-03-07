@@ -22,7 +22,7 @@ export function useSupabaseEmployees() {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  const addEmployee = useCallback(async (emp: Omit<DbEmployee, "id" | "created_at" | "updated_at">) => {
+  const addEmployee = useCallback(async (emp: Partial<DbEmployee> & { employee_id: string; first_name: string; last_name: string }) => {
     const { error } = await supabase.from("employees").insert(emp);
     if (error) throw error;
     await fetchEmployees();
