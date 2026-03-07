@@ -14,16 +14,227 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      deduction_presets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          pagibig: number
+          philhealth: number
+          sss: number
+          withholding_tax: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          pagibig?: number
+          philhealth?: number
+          sss?: number
+          withholding_tax?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          pagibig?: number
+          philhealth?: number
+          sss?: number
+          withholding_tax?: number
+        }
+        Relationships: []
+      }
+      employees: {
+        Row: {
+          address: string | null
+          basic_salary: number
+          contact_number: string | null
+          created_at: string
+          date_hired: string | null
+          department: string | null
+          email: string | null
+          employee_id: string
+          employment_type: string | null
+          first_name: string
+          id: string
+          last_name: string
+          pagibig_number: string | null
+          philhealth_number: string | null
+          position: string | null
+          sss_number: string | null
+          status: string
+          tin: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          basic_salary?: number
+          contact_number?: string | null
+          created_at?: string
+          date_hired?: string | null
+          department?: string | null
+          email?: string | null
+          employee_id: string
+          employment_type?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          pagibig_number?: string | null
+          philhealth_number?: string | null
+          position?: string | null
+          sss_number?: string | null
+          status?: string
+          tin?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          basic_salary?: number
+          contact_number?: string | null
+          created_at?: string
+          date_hired?: string | null
+          department?: string | null
+          email?: string | null
+          employee_id?: string
+          employment_type?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          pagibig_number?: string | null
+          philhealth_number?: string | null
+          position?: string | null
+          sss_number?: string | null
+          status?: string
+          tin?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payroll_records: {
+        Row: {
+          allowances: number
+          basic_salary: number
+          created_at: string
+          deductions: Json
+          employee_id: string
+          gross_pay: number
+          id: string
+          net_pay: number
+          overtime: number
+          period: string
+          period_type: string | null
+          status: string
+          total_deductions: number
+          updated_at: string
+        }
+        Insert: {
+          allowances?: number
+          basic_salary?: number
+          created_at?: string
+          deductions?: Json
+          employee_id: string
+          gross_pay?: number
+          id?: string
+          net_pay?: number
+          overtime?: number
+          period: string
+          period_type?: string | null
+          status?: string
+          total_deductions?: number
+          updated_at?: string
+        }
+        Update: {
+          allowances?: number
+          basic_salary?: number
+          created_at?: string
+          deductions?: Json
+          employee_id?: string
+          gross_pay?: number
+          id?: string
+          net_pay?: number
+          overtime?: number
+          period?: string
+          period_type?: string | null
+          status?: string
+          total_deductions?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "hr" | "manager" | "employee"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +361,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "hr", "manager", "employee"],
+    },
   },
 } as const

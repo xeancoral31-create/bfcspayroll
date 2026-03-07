@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { usePayrollRecords } from "@/hooks/usePayrollData";
+import { useSupabasePayrollRecords, type PayrollRecordWithEmployee } from "@/hooks/useSupabasePayroll";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,23 +7,21 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Eye, CheckCircle, Trash2, Printer } from "lucide-react";
 import { toast } from "sonner";
-import type { PayrollRecord } from "@/types/payroll";
 
 const fmt = (n: number) => "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
 export default function Payslips() {
-  const { records, markAsPaid, deleteRecord } = usePayrollRecords();
+  const { records, loading, markAsPaid, deleteRecord } = useSupabasePayrollRecords();
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<PayrollRecord | null>(null);
+  const [selected, setSelected] = useState<PayrollRecordWithEmployee | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const filtered = records
-    .filter((r) =>
-      `${r.employee.firstName} ${r.employee.lastName} ${r.period}`.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const filtered = records.filter((r) =>
+    `${r.employees.first_name} ${r.employees.last_name} ${r.period}`.toLowerCase().includes(search.toLowerCase())
+  );
 
   const handlePrint = () => {
     if (!printRef.current) return;
@@ -50,6 +48,15 @@ export default function Payslips() {
     win.document.close();
     win.print();
   };
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <div><h1 className="text-2xl font-bold text-foreground">Payslips</h1></div>
+        <Skeleton className="h-96 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -84,11 +91,11 @@ export default function Payslips() {
               <TableBody>
                 {filtered.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.employee.firstName} {r.employee.lastName}</TableCell>
+                    <TableCell className="font-medium">{r.employees.first_name} {r.employees.last_name}</TableCell>
                     <TableCell>{r.period}</TableCell>
-                    <TableCell className="text-right font-mono text-sm">{fmt(r.grossPay)}</TableCell>
-                    <TableCell className="text-right font-mono text-sm">{fmt(r.totalDeductions)}</TableCell>
-                    <TableCell className="text-right font-mono text-sm font-semibold">{fmt(r.netPay)}</TableCell>
+                    <TableCell className="text-right font-mono text-sm">{fmt(Number(r.gross_pay))}</TableCell>
+                    <TableCell className="text-right font-mono text-sm">{fmt(Number(r.total_deductions))}</TableCell>
+                    <TableCell className="text-right font-mono text-sm font-semibold">{fmt(Number(r.net_pay))}</TableCell>
                     <TableCell>
                       <Badge variant={r.status === "paid" ? "default" : "secondary"} className={r.status === "paid" ? "bg-success text-success-foreground" : ""}>
                         {r.status}
@@ -98,11 +105,11 @@ export default function Payslips() {
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={() => setSelected(r)}><Eye className="h-4 w-4" /></Button>
                         {r.status === "processed" && (
-                          <Button variant="ghost" size="icon" onClick={() => { markAsPaid(r.id); toast.success("Marked as paid"); }}>
+                          <Button variant="ghost" size="icon" onClick={async () => { await markAsPaid(r.id); toast.success("Marked as paid"); }}>
                             <CheckCircle className="h-4 w-4 text-success" />
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" onClick={() => { deleteRecord(r.id); toast.success("Record deleted"); }} className="text-destructive hover:text-destructive">
+                        <Button variant="ghost" size="icon" onClick={async () => { await deleteRecord(r.id); toast.success("Record deleted"); }} className="text-destructive hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -115,7 +122,6 @@ export default function Payslips() {
         </CardContent>
       </Card>
 
-      {/* Payslip Detail Dialog */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -126,42 +132,42 @@ export default function Payslips() {
           </DialogHeader>
           {selected && (
             <div ref={printRef}>
-              <div className="header" style={{ textAlign: "center", borderBottom: "2px solid hsl(199, 89%, 38%)", paddingBottom: 12, marginBottom: 16 }}>
+              <div style={{ textAlign: "center", borderBottom: "2px solid hsl(199, 89%, 38%)", paddingBottom: 12, marginBottom: 16 }}>
                 <h1 style={{ fontSize: 18, margin: 0, color: "hsl(199, 89%, 38%)" }}>PayrollPro</h1>
                 <p style={{ margin: "4px 0 0", fontSize: 12, color: "#666" }}>School Payroll Management System</p>
               </div>
               <div className="flex justify-between text-sm mb-4">
                 <div>
-                  <p className="font-semibold text-foreground">{selected.employee.firstName} {selected.employee.lastName}</p>
-                  <p className="text-xs text-muted-foreground">{selected.employee.position} • {selected.employee.department}</p>
-                  <p className="text-xs text-muted-foreground">ID: {selected.employee.employeeId}</p>
+                  <p className="font-semibold text-foreground">{selected.employees.first_name} {selected.employees.last_name}</p>
+                  <p className="text-xs text-muted-foreground">{selected.employees.position} • {selected.employees.department}</p>
+                  <p className="text-xs text-muted-foreground">ID: {selected.employees.employee_id}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-foreground">{selected.period}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(selected.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(selected.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
               <Separator className="mb-3" />
               <div className="space-y-2 text-sm">
-                <Row label="Basic Salary" value={fmt(selected.basicSalary)} />
-                <Row label="Allowances" value={fmt(selected.allowances)} />
-                <Row label="Overtime" value={fmt(selected.overtime)} />
+                <Row label="Basic Salary" value={fmt(Number(selected.basic_salary))} />
+                <Row label="Allowances" value={fmt(Number(selected.allowances))} />
+                <Row label="Overtime" value={fmt(Number(selected.overtime))} />
                 <Separator />
-                <Row label="Gross Pay" value={fmt(selected.grossPay)} bold />
+                <Row label="Gross Pay" value={fmt(Number(selected.gross_pay))} bold />
               </div>
               <div className="mt-3 rounded-lg bg-muted/50 p-3">
                 <p className="mb-2 text-xs font-medium text-muted-foreground">DEDUCTIONS</p>
                 <div className="space-y-1.5 text-sm">
-                  {selected.deductions.map((d) => (
+                  {(selected.deductions as any[])?.map((d: any) => (
                     <Row key={d.name} label={d.name} value={`- ${fmt(d.amount)}`} />
                   ))}
                   <Separator />
-                  <Row label="Total Deductions" value={fmt(selected.totalDeductions)} bold />
+                  <Row label="Total Deductions" value={fmt(Number(selected.total_deductions))} bold />
                 </div>
               </div>
-              <div className="total mt-4 rounded-lg border-2 border-primary/20 bg-primary/5 p-4 text-center">
+              <div className="mt-4 rounded-lg border-2 border-primary/20 bg-primary/5 p-4 text-center">
                 <p className="text-xs text-muted-foreground">NET PAY</p>
-                <p className="text-2xl font-bold text-primary">{fmt(selected.netPay)}</p>
+                <p className="text-2xl font-bold text-primary">{fmt(Number(selected.net_pay))}</p>
               </div>
             </div>
           )}

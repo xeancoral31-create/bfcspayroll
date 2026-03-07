@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useEmployees, usePayrollRecords } from "@/hooks/usePayrollData";
+import { useState } from "react";
+import { useSupabaseEmployees, useSupabasePayrollRecords, useDeductionPresets } from "@/hooks/useSupabasePayroll";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calculator, CheckCircle, Plus, Trash2, Save, FolderOpen } from "lucide-react";
+import { Calculator, CheckCircle, Plus, Trash2, Save, FolderOpen, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const fmt = (n: number) => "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2 });
-
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 interface EarningItem {
@@ -21,69 +20,36 @@ interface EarningItem {
   amount: number;
 }
 
-interface DeductionPreset {
-  id: string;
-  name: string;
-  sss: number;
-  philHealth: number;
-  pagIbig: number;
-  withholdingTax: number;
-}
-
-const PRESETS_KEY = "payroll_deduction_presets";
-
-function loadPresets(): DeductionPreset[] {
-  try {
-    const stored = localStorage.getItem(PRESETS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function savePresets(presets: DeductionPreset[]) {
-  localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
-}
-
 export default function Payroll() {
-  const { employees } = useEmployees();
-  const { processPayrollManual } = usePayrollRecords();
+  const { employees } = useSupabaseEmployees();
+  const { processPayroll } = useSupabasePayrollRecords();
+  const { presets, addPreset, deletePreset } = useDeductionPresets();
   const activeEmployees = employees.filter((e) => e.status === "active");
 
   const [selectedId, setSelectedId] = useState("");
   const [month, setMonth] = useState(months[new Date().getMonth()]);
   const [year, setYear] = useState(String(new Date().getFullYear()));
   const [result, setResult] = useState<any>(null);
+  const [computing, setComputing] = useState(false);
 
-  // Gross Pay tab - additional earnings
   const [earningItems, setEarningItems] = useState<EarningItem[]>([
     { id: "allowance", name: "Allowances", amount: 0 },
     { id: "overtime", name: "Overtime Pay", amount: 0 },
   ]);
 
-  // Deductions tab - cashier manually inputs
   const [sss, setSss] = useState(0);
   const [philHealth, setPhilHealth] = useState(0);
   const [pagIbig, setPagIbig] = useState(0);
   const [withholdingTax, setWithholdingTax] = useState(0);
 
-  // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Presets
-  const [presets, setPresets] = useState<DeductionPreset[]>(loadPresets);
   const [presetDialogOpen, setPresetDialogOpen] = useState(false);
   const [presetName, setPresetName] = useState("");
-  const [saveMode, setSaveMode] = useState(false); // true = saving, false = loading
-
-  useEffect(() => {
-    savePresets(presets);
-  }, [presets]);
+  const [saveMode, setSaveMode] = useState(false);
 
   const selected = activeEmployees.find((e) => e.id === selectedId);
-
   const totalEarnings = earningItems.reduce((sum, item) => sum + item.amount, 0);
-  const grossPay = (selected?.basicSalary ?? 0) + totalEarnings;
+  const grossPay = Number(selected?.basic_salary ?? 0) + totalEarnings;
   const totalDeductions = sss + philHealth + pagIbig + withholdingTax;
   const netPay = grossPay - totalDeductions;
 
@@ -92,9 +58,7 @@ export default function Payroll() {
   };
 
   const updateEarningItem = (id: string, field: "name" | "amount", value: string | number) => {
-    setEarningItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    );
+    setEarningItems((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
   };
 
   const removeEarningItem = (id: string) => {
@@ -113,48 +77,40 @@ export default function Payroll() {
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-
     if (!selectedId) errs.employee = "Please select an employee.";
-
-    // Check earning amounts
     for (const item of earningItems) {
-      if (item.amount < 0) {
-        errs[`earning_${item.id}`] = "Amount cannot be negative.";
-      }
+      if (item.amount < 0) errs[`earning_${item.id}`] = "Amount cannot be negative.";
     }
-
-    // Require all deduction fields (must be > 0)
     if (sss <= 0) errs.sss = "SSS amount is required.";
     if (philHealth <= 0) errs.philHealth = "PhilHealth amount is required.";
     if (pagIbig <= 0) errs.pagIbig = "Pag-IBIG amount is required.";
     if (withholdingTax <= 0) errs.withholdingTax = "Withholding Tax is required.";
-
-    // Check for negative deductions
-    if (sss < 0) errs.sss = "Cannot be negative.";
-    if (philHealth < 0) errs.philHealth = "Cannot be negative.";
-    if (pagIbig < 0) errs.pagIbig = "Cannot be negative.";
-    if (withholdingTax < 0) errs.withholdingTax = "Cannot be negative.";
-
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const handleCompute = () => {
+  const handleCompute = async () => {
     if (!validate()) {
       toast.error("Please fix the errors before computing.");
       return;
     }
-    const period = `${month} ${year}`;
-    const deductions = [
-      { name: "SSS", amount: sss, type: "fixed" as const },
-      { name: "PhilHealth", amount: philHealth, type: "fixed" as const },
-      { name: "Pag-IBIG", amount: pagIbig, type: "fixed" as const },
-      { name: "Withholding Tax", amount: withholdingTax, type: "fixed" as const },
-    ];
-    const allowances = earningItems.reduce((sum, item) => sum + item.amount, 0);
-    const record = processPayrollManual(selected!, period, allowances, 0, deductions);
-    setResult(record);
-    toast.success("Payroll processed successfully!");
+    setComputing(true);
+    try {
+      const period = `${month} ${year}`;
+      const deductions = [
+        { name: "SSS", amount: sss, type: "fixed" },
+        { name: "PhilHealth", amount: philHealth, type: "fixed" },
+        { name: "Pag-IBIG", amount: pagIbig, type: "fixed" },
+        { name: "Withholding Tax", amount: withholdingTax, type: "fixed" },
+      ];
+      const allowances = earningItems.reduce((sum, item) => sum + item.amount, 0);
+      const record = await processPayroll(selected!, period, "monthly", allowances, 0, deductions);
+      setResult(record);
+      toast.success("Payroll processed successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to process payroll");
+    }
+    setComputing(false);
   };
 
   const reset = () => {
@@ -171,38 +127,43 @@ export default function Payroll() {
     setErrors({});
   };
 
-  // Preset functions
-  const handleSavePreset = () => {
+  const handleSavePreset = async () => {
     if (!presetName.trim()) {
       toast.error("Please enter a preset name.");
       return;
     }
-    const preset: DeductionPreset = {
-      id: crypto.randomUUID(),
-      name: presetName.trim(),
-      sss,
-      philHealth,
-      pagIbig,
-      withholdingTax,
-    };
-    setPresets((prev) => [...prev, preset]);
-    setPresetDialogOpen(false);
-    setPresetName("");
-    toast.success(`Preset "${preset.name}" saved!`);
+    try {
+      await addPreset({
+        name: presetName.trim(),
+        sss,
+        philhealth: philHealth,
+        pagibig: pagIbig,
+        withholding_tax: withholdingTax,
+      });
+      setPresetDialogOpen(false);
+      setPresetName("");
+      toast.success("Preset saved!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save preset");
+    }
   };
 
-  const handleLoadPreset = (preset: DeductionPreset) => {
-    setSss(preset.sss);
-    setPhilHealth(preset.philHealth);
-    setPagIbig(preset.pagIbig);
-    setWithholdingTax(preset.withholdingTax);
+  const handleLoadPreset = (preset: typeof presets[0]) => {
+    setSss(Number(preset.sss));
+    setPhilHealth(Number(preset.philhealth));
+    setPagIbig(Number(preset.pagibig));
+    setWithholdingTax(Number(preset.withholding_tax));
     setPresetDialogOpen(false);
     toast.success(`Loaded preset "${preset.name}"`);
   };
 
-  const handleDeletePreset = (id: string) => {
-    setPresets((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Preset deleted.");
+  const handleDeletePreset = async (id: string) => {
+    try {
+      await deletePreset(id);
+      toast.success("Preset deleted.");
+    } catch {
+      toast.error("Failed to delete preset");
+    }
   };
 
   return (
@@ -213,13 +174,9 @@ export default function Payroll() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Input Side */}
         <div className="space-y-4">
-          {/* Employee & Period Selection */}
           <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="text-base">Employee & Period</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-base">Employee & Period</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
                 <Label>Employee</Label>
@@ -227,7 +184,7 @@ export default function Payroll() {
                   <SelectTrigger className={errors.employee ? "border-destructive" : ""}><SelectValue placeholder="Select employee" /></SelectTrigger>
                   <SelectContent>
                     {activeEmployees.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName} — {e.position}</SelectItem>
+                      <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name} — {e.position}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -249,13 +206,12 @@ export default function Payroll() {
               {selected && (
                 <div className="rounded-lg border border-border bg-muted/50 p-3">
                   <p className="text-xs text-muted-foreground">Basic Monthly Salary</p>
-                  <p className="text-lg font-bold text-foreground">{fmt(selected.basicSalary)}</p>
+                  <p className="text-lg font-bold text-foreground">{fmt(Number(selected.basic_salary))}</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Tabs for Gross Pay & Deductions */}
           <Card className="shadow-card">
             <CardContent className="pt-6">
               <Tabs defaultValue="gross-pay">
@@ -264,7 +220,6 @@ export default function Payroll() {
                   <TabsTrigger value="deductions" className="flex-1">Deductions</TabsTrigger>
                 </TabsList>
 
-                {/* Gross Pay Tab */}
                 <TabsContent value="gross-pay" className="space-y-4 pt-4">
                   <p className="text-xs text-muted-foreground">Add allowances, overtime, and other earnings on top of the basic salary.</p>
                   {earningItems.map((item) => (
@@ -272,28 +227,13 @@ export default function Payroll() {
                       <div className="flex items-end gap-2">
                         <div className="flex-1 space-y-1.5">
                           <Label className="text-xs">Description</Label>
-                          <Input
-                            value={item.name}
-                            onChange={(e) => updateEarningItem(item.id, "name", e.target.value)}
-                            placeholder="e.g. Allowance"
-                          />
+                          <Input value={item.name} onChange={(e) => updateEarningItem(item.id, "name", e.target.value)} placeholder="e.g. Allowance" />
                         </div>
                         <div className="w-32 space-y-1.5">
                           <Label className="text-xs">Amount (₱)</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            value={item.amount || ""}
-                            onChange={(e) => updateEarningAmount(item.id, e.target.value)}
-                            className={errors[`earning_${item.id}`] ? "border-destructive" : ""}
-                          />
+                          <Input type="number" min="0" value={item.amount || ""} onChange={(e) => updateEarningAmount(item.id, e.target.value)} className={errors[`earning_${item.id}`] ? "border-destructive" : ""} />
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="mb-0.5 text-destructive hover:text-destructive"
-                          onClick={() => removeEarningItem(item.id)}
-                        >
+                        <Button variant="ghost" size="icon" className="mb-0.5 text-destructive hover:text-destructive" onClick={() => removeEarningItem(item.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -310,7 +250,6 @@ export default function Payroll() {
                   </div>
                 </TabsContent>
 
-                {/* Deductions Tab */}
                 <TabsContent value="deductions" className="space-y-4 pt-4">
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">Enter the deduction amounts manually.</p>
@@ -355,25 +294,22 @@ export default function Payroll() {
             </CardContent>
           </Card>
 
-          {/* Live Net Pay Preview */}
           {selected && (
             <Card className="border-2 border-primary/20 bg-primary/5 shadow-card">
               <CardContent className="py-4 text-center">
                 <p className="text-xs text-muted-foreground">ESTIMATED NET PAY</p>
                 <p className={`text-2xl font-bold ${netPay < 0 ? "text-destructive" : "text-primary"}`}>{fmt(netPay)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Gross {fmt(grossPay)} − Deductions {fmt(totalDeductions)}
-                </p>
+                <p className="mt-1 text-xs text-muted-foreground">Gross {fmt(grossPay)} − Deductions {fmt(totalDeductions)}</p>
               </CardContent>
             </Card>
           )}
 
-          <Button onClick={handleCompute} className="w-full" disabled={!selectedId}>
-            <Calculator className="mr-2 h-4 w-4" />Compute & Save Payroll
+          <Button onClick={handleCompute} className="w-full" disabled={!selectedId || computing}>
+            {computing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Calculator className="mr-2 h-4 w-4" />}
+            Compute & Save Payroll
           </Button>
         </div>
 
-        {/* Result */}
         <Card className={`shadow-card transition-opacity ${result ? "opacity-100" : "opacity-50"}`}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -387,29 +323,29 @@ export default function Payroll() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">{result.employee.firstName} {result.employee.lastName}</p>
-                  <p className="text-xs text-muted-foreground">{result.employee.position} • {result.period}</p>
+                  <p className="text-sm font-semibold text-foreground">{result.employees?.first_name} {result.employees?.last_name}</p>
+                  <p className="text-xs text-muted-foreground">{result.employees?.position} • {result.period}</p>
                 </div>
                 <Separator />
                 <div className="space-y-2 text-sm">
-                  <Row label="Basic Salary" value={fmt(result.basicSalary)} />
-                  <Row label="Allowances / Extras" value={fmt(result.allowances)} />
+                  <Row label="Basic Salary" value={fmt(Number(result.basic_salary))} />
+                  <Row label="Allowances / Extras" value={fmt(Number(result.allowances))} />
                   <Separator />
-                  <Row label="Gross Pay" value={fmt(result.grossPay)} bold />
+                  <Row label="Gross Pay" value={fmt(Number(result.gross_pay))} bold />
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3">
                   <p className="mb-2 text-xs font-medium text-muted-foreground">DEDUCTIONS</p>
                   <div className="space-y-1.5 text-sm">
-                    {result.deductions.map((d: any) => (
+                    {(result.deductions as any[])?.map((d: any) => (
                       <Row key={d.name} label={d.name} value={`- ${fmt(d.amount)}`} />
                     ))}
                     <Separator />
-                    <Row label="Total Deductions" value={fmt(result.totalDeductions)} bold />
+                    <Row label="Total Deductions" value={fmt(Number(result.total_deductions))} bold />
                   </div>
                 </div>
                 <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-4 text-center">
                   <p className="text-xs text-muted-foreground">NET PAY</p>
-                  <p className="text-2xl font-bold text-primary">{fmt(result.netPay)}</p>
+                  <p className="text-2xl font-bold text-primary">{fmt(Number(result.net_pay))}</p>
                 </div>
                 <Button variant="outline" onClick={reset} className="w-full">Process Another</Button>
               </div>
@@ -418,7 +354,6 @@ export default function Payroll() {
         </Card>
       </div>
 
-      {/* Preset Dialog */}
       <Dialog open={presetDialogOpen} onOpenChange={setPresetDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -443,14 +378,14 @@ export default function Payroll() {
           ) : (
             <div className="space-y-3">
               {presets.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">No presets saved yet. Enter deduction amounts and click "Save Preset".</p>
+                <p className="py-8 text-center text-sm text-muted-foreground">No presets saved yet.</p>
               ) : (
                 presets.map((p) => (
                   <div key={p.id} className="flex items-center gap-2 rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors">
                     <button className="flex-1 text-left" onClick={() => handleLoadPreset(p)}>
                       <p className="text-sm font-medium text-foreground">{p.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        SSS: {fmt(p.sss)} • PH: {fmt(p.philHealth)} • PI: {fmt(p.pagIbig)} • Tax: {fmt(p.withholdingTax)}
+                        SSS: {fmt(Number(p.sss))} • PH: {fmt(Number(p.philhealth))} • PI: {fmt(Number(p.pagibig))} • Tax: {fmt(Number(p.withholding_tax))}
                       </p>
                     </button>
                     <Button variant="ghost" size="icon" onClick={() => handleDeletePreset(p.id)} className="text-destructive hover:text-destructive">

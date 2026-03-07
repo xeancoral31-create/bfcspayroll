@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useEmployees } from "@/hooks/usePayrollData";
+import { useSupabaseEmployees } from "@/hooks/useSupabasePayroll";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -8,70 +8,100 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
-import type { Employee } from "@/types/payroll";
+import { Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const departments = ["Administration", "Academics", "Finance", "Maintenance"];
 const fmt = (n: number) => "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
-const emptyForm: Omit<Employee, "id"> = {
-  employeeId: "",
-  firstName: "",
-  lastName: "",
+const emptyForm = {
+  employee_id: "",
+  first_name: "",
+  last_name: "",
   email: "",
   position: "",
   department: "Academics",
-  basicSalary: 0,
-  dateHired: new Date().toISOString().slice(0, 10),
+  basic_salary: 0,
+  date_hired: new Date().toISOString().slice(0, 10),
   status: "active",
 };
 
 export default function Employees() {
-  const { employees, addEmployee, updateEmployee, deleteEmployee } = useEmployees();
+  const { employees, loading, addEmployee, updateEmployee, deleteEmployee } = useSupabaseEmployees();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState<Omit<Employee, "id">>(emptyForm);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
 
   const filtered = employees.filter(
     (e) =>
-      `${e.firstName} ${e.lastName} ${e.employeeId} ${e.position}`.toLowerCase().includes(search.toLowerCase())
+      `${e.first_name} ${e.last_name} ${e.employee_id} ${e.position}`.toLowerCase().includes(search.toLowerCase())
   );
 
   const openAdd = () => {
     setEditId(null);
-    setForm({ ...emptyForm, employeeId: `EMP-${String(employees.length + 1).padStart(3, "0")}` });
+    setForm({ ...emptyForm, employee_id: `EMP-${String(employees.length + 1).padStart(3, "0")}` });
     setDialogOpen(true);
   };
 
-  const openEdit = (emp: Employee) => {
+  const openEdit = (emp: typeof employees[0]) => {
     setEditId(emp.id);
-    const { id: _id, ...rest } = emp;
-    setForm(rest);
+    setForm({
+      employee_id: emp.employee_id,
+      first_name: emp.first_name,
+      last_name: emp.last_name,
+      email: emp.email ?? "",
+      position: emp.position ?? "",
+      department: emp.department ?? "Academics",
+      basic_salary: Number(emp.basic_salary),
+      date_hired: emp.date_hired ?? new Date().toISOString().slice(0, 10),
+      status: emp.status,
+    });
+    setDialogOpen(true);
   };
 
-  const handleSave = () => {
-    if (!form.firstName || !form.lastName || !form.position || form.basicSalary <= 0) {
+  const handleSave = async () => {
+    if (!form.first_name || !form.last_name || !form.position || form.basic_salary <= 0) {
       toast.error("Please fill in all required fields.");
       return;
     }
-    if (editId) {
-      updateEmployee(editId, form);
-      toast.success("Employee updated");
-    } else {
-      addEmployee(form);
-      toast.success("Employee added");
+    setSaving(true);
+    try {
+      if (editId) {
+        await updateEmployee(editId, form);
+        toast.success("Employee updated");
+      } else {
+        await addEmployee(form);
+        toast.success("Employee added");
+      }
+      setDialogOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save employee");
     }
-    setDialogOpen(false);
+    setSaving(false);
   };
 
-  const handleDelete = (id: string) => {
-    deleteEmployee(id);
-    toast.success("Employee removed");
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteEmployee(id);
+      toast.success("Employee removed");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete");
+    }
   };
 
   const updateField = (key: string, value: string | number) => setForm((f) => ({ ...f, [key]: value }));
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <div><h1 className="text-2xl font-bold text-foreground">Employees</h1></div>
+        <Skeleton className="h-96 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -92,21 +122,21 @@ export default function Employees() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Employee ID</Label>
-                  <Input value={form.employeeId} onChange={(e) => updateField("employeeId", e.target.value)} />
+                  <Input value={form.employee_id} onChange={(e) => updateField("employee_id", e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Date Hired</Label>
-                  <Input type="date" value={form.dateHired} onChange={(e) => updateField("dateHired", e.target.value)} />
+                  <Input type="date" value={form.date_hired} onChange={(e) => updateField("date_hired", e.target.value)} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>First Name *</Label>
-                  <Input value={form.firstName} onChange={(e) => updateField("firstName", e.target.value)} />
+                  <Input value={form.first_name} onChange={(e) => updateField("first_name", e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Last Name *</Label>
-                  <Input value={form.lastName} onChange={(e) => updateField("lastName", e.target.value)} />
+                  <Input value={form.last_name} onChange={(e) => updateField("last_name", e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1.5">
@@ -131,7 +161,7 @@ export default function Employees() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Basic Salary *</Label>
-                  <Input type="number" value={form.basicSalary || ""} onChange={(e) => updateField("basicSalary", Number(e.target.value))} />
+                  <Input type="number" value={form.basic_salary || ""} onChange={(e) => updateField("basic_salary", Number(e.target.value))} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Status</Label>
@@ -144,7 +174,10 @@ export default function Employees() {
                   </Select>
                 </div>
               </div>
-              <Button onClick={handleSave} className="mt-2">{editId ? "Update" : "Add"} Employee</Button>
+              <Button onClick={handleSave} className="mt-2" disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {editId ? "Update" : "Add"} Employee
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -173,11 +206,11 @@ export default function Employees() {
             <TableBody>
               {filtered.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="font-mono text-xs">{e.employeeId}</TableCell>
-                  <TableCell className="font-medium">{e.firstName} {e.lastName}</TableCell>
+                  <TableCell className="font-mono text-xs">{e.employee_id}</TableCell>
+                  <TableCell className="font-medium">{e.first_name} {e.last_name}</TableCell>
                   <TableCell>{e.position}</TableCell>
                   <TableCell>{e.department}</TableCell>
-                  <TableCell className="text-right font-mono text-sm">{fmt(e.basicSalary)}</TableCell>
+                  <TableCell className="text-right font-mono text-sm">{fmt(Number(e.basic_salary))}</TableCell>
                   <TableCell>
                     <Badge variant={e.status === "active" ? "default" : "secondary"} className={e.status === "active" ? "bg-success text-success-foreground" : ""}>
                       {e.status}

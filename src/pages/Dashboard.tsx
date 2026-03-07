@@ -1,18 +1,20 @@
 import { Users, DollarSign, TrendingUp, Clock } from "lucide-react";
-import { useEmployees, usePayrollRecords } from "@/hooks/usePayrollData";
+import { useSupabaseEmployees, useSupabasePayrollRecords } from "@/hooks/useSupabasePayroll";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const fmt = (n: number) => "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
 export default function Dashboard() {
-  const { employees } = useEmployees();
-  const { records } = usePayrollRecords();
+  const { employees, loading: empLoading } = useSupabaseEmployees();
+  const { records, loading: recLoading } = useSupabasePayrollRecords();
 
+  const loading = empLoading || recLoading;
   const activeEmployees = employees.filter((e) => e.status === "active");
-  const totalGross = records.reduce((s, r) => s + r.grossPay, 0);
-  const totalNet = records.reduce((s, r) => s + r.netPay, 0);
+  const totalGross = records.reduce((s, r) => s + Number(r.gross_pay), 0);
+  const totalNet = records.reduce((s, r) => s + Number(r.net_pay), 0);
   const pendingCount = records.filter((r) => r.status === "processed").length;
 
   const stats = [
@@ -22,7 +24,18 @@ export default function Dashboard() {
     { label: "Pending Payslips", value: pendingCount, icon: Clock, color: "text-warning" },
   ];
 
-  const recentRecords = [...records].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
+  const recentRecords = records.slice(0, 5);
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <div><h1 className="text-2xl font-bold text-foreground">Dashboard</h1></div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -68,9 +81,9 @@ export default function Dashboard() {
                 <TableBody>
                   {recentRecords.map((r) => (
                     <TableRow key={r.id}>
-                      <TableCell className="font-medium">{r.employee.firstName} {r.employee.lastName}</TableCell>
+                      <TableCell className="font-medium">{r.employees.first_name} {r.employees.last_name}</TableCell>
                       <TableCell>{r.period}</TableCell>
-                      <TableCell className="text-right font-mono text-sm">{fmt(r.netPay)}</TableCell>
+                      <TableCell className="text-right font-mono text-sm">{fmt(Number(r.net_pay))}</TableCell>
                       <TableCell>
                         <Badge variant={r.status === "paid" ? "default" : "secondary"} className={r.status === "paid" ? "bg-success text-success-foreground" : ""}>
                           {r.status}
@@ -94,16 +107,19 @@ export default function Dashboard() {
                 <div key={e.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                      {e.firstName[0]}{e.lastName[0]}
+                      {e.first_name[0]}{e.last_name[0]}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">{e.firstName} {e.lastName}</p>
+                      <p className="text-sm font-medium text-foreground">{e.first_name} {e.last_name}</p>
                       <p className="text-xs text-muted-foreground">{e.position}</p>
                     </div>
                   </div>
-                  <p className="font-mono text-sm text-foreground">{fmt(e.basicSalary)}</p>
+                  <p className="font-mono text-sm text-foreground">{fmt(Number(e.basic_salary))}</p>
                 </div>
               ))}
+              {activeEmployees.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">No employees yet. Add employees to get started.</p>
+              )}
             </div>
           </CardContent>
         </Card>
