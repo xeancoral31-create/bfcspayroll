@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { usePayrollRecords, useEmployees } from "@/hooks/usePayrollData";
+import { useSupabasePayrollRecords, useSupabaseEmployees } from "@/hooks/useSupabasePayroll";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
 
 const fmt = (n: number) => "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2 });
@@ -15,36 +16,32 @@ const COLORS = [
 ];
 
 export default function Reports() {
-  const { records } = usePayrollRecords();
-  const { employees } = useEmployees();
+  const { records, loading: recLoading } = useSupabasePayrollRecords();
+  const { employees, loading: empLoading } = useSupabaseEmployees();
 
-  // Monthly expense data
+  const loading = recLoading || empLoading;
+
   const monthlyData = useMemo(() => {
     const map = new Map<string, { gross: number; deductions: number; net: number }>();
     for (const r of records) {
       const existing = map.get(r.period) || { gross: 0, deductions: 0, net: 0 };
-      existing.gross += r.grossPay;
-      existing.deductions += r.totalDeductions;
-      existing.net += r.netPay;
+      existing.gross += Number(r.gross_pay);
+      existing.deductions += Number(r.total_deductions);
+      existing.net += Number(r.net_pay);
       map.set(r.period, existing);
     }
-    return Array.from(map.entries()).map(([period, data]) => ({
-      period,
-      ...data,
-    }));
+    return Array.from(map.entries()).map(([period, data]) => ({ period, ...data }));
   }, [records]);
 
-  // Department breakdown
   const departmentData = useMemo(() => {
     const map = new Map<string, number>();
     for (const r of records) {
-      const dept = r.employee.department;
-      map.set(dept, (map.get(dept) || 0) + r.netPay);
+      const dept = r.employees?.department ?? "Unknown";
+      map.set(dept, (map.get(dept) || 0) + Number(r.net_pay));
     }
     return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
   }, [records]);
 
-  // Trend data (cumulative by period)
   const trendData = useMemo(() => {
     let cumulative = 0;
     return monthlyData.map((d) => {
@@ -53,11 +50,11 @@ export default function Reports() {
     });
   }, [monthlyData]);
 
-  // Summary stats
-  const totalGross = records.reduce((s, r) => s + r.grossPay, 0);
-  const totalDeductions = records.reduce((s, r) => s + r.totalDeductions, 0);
-  const totalNet = records.reduce((s, r) => s + r.netPay, 0);
-  const avgNetPerEmployee = employees.length > 0 ? totalNet / employees.filter((e) => e.status === "active").length : 0;
+  const totalGross = records.reduce((s, r) => s + Number(r.gross_pay), 0);
+  const totalDeductions = records.reduce((s, r) => s + Number(r.total_deductions), 0);
+  const totalNet = records.reduce((s, r) => s + Number(r.net_pay), 0);
+  const activeCount = employees.filter((e) => e.status === "active").length;
+  const avgNetPerEmployee = activeCount > 0 ? totalNet / activeCount : 0;
 
   const stats = [
     { label: "Total Gross Pay", value: fmt(totalGross) },
@@ -66,6 +63,17 @@ export default function Reports() {
     { label: "Avg Net / Employee", value: fmt(avgNetPerEmployee) },
   ];
 
+  if (loading) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <div><h1 className="text-2xl font-bold text-foreground">Payroll Reports</h1></div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fade-in space-y-6">
       <div>
@@ -73,7 +81,6 @@ export default function Reports() {
         <p className="text-sm text-muted-foreground">Analytics and insights from payroll data</p>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((s) => (
           <Card key={s.label} className="shadow-card">
@@ -93,11 +100,8 @@ export default function Reports() {
         </Card>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Monthly Expenses Bar Chart */}
           <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="text-base">Monthly Expenses</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-base">Monthly Expenses</CardTitle></CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={monthlyData}>
@@ -114,24 +118,13 @@ export default function Reports() {
             </CardContent>
           </Card>
 
-          {/* Department Breakdown Pie Chart */}
           <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="text-base">Department Breakdown</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-base">Department Breakdown</CardTitle></CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-                  <Pie
-                    data={departmentData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={4}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  >
+                  <Pie data={departmentData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={4} dataKey="value"
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
                     {departmentData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -142,11 +135,8 @@ export default function Reports() {
             </CardContent>
           </Card>
 
-          {/* Trends Line Chart */}
           <Card className="shadow-card lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-base">Net Pay Trends</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-base">Net Pay Trends</CardTitle></CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={trendData}>

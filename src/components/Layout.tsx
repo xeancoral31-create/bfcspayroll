@@ -1,6 +1,8 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Calculator, FileText, BarChart3, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, Calculator, FileText, BarChart3, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -13,15 +15,14 @@ const navItems = [
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-foreground/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 lg:static lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -61,12 +62,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="border-t border-sidebar-border px-4 py-4">
+            {user && (
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary/20 text-xs font-bold text-sidebar-primary">
+                  {user.email?.[0]?.toUpperCase() ?? "U"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-xs font-medium text-sidebar-accent-foreground">{user.email}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50"
+                  onClick={signOut}
+                  title="Sign out"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
             <p className="text-xs text-sidebar-foreground/50">© 2026 PayrollPro</p>
           </div>
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-14 items-center gap-4 border-b border-border bg-card px-4 lg:px-6">
           <button
