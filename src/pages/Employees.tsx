@@ -96,6 +96,11 @@ export default function Employees() {
           email: form.email || undefined, contact_number: form.contact_number || undefined,
           date_hired: form.date_hired || undefined, status: form.status,
         });
+        await createNotification(
+          "New Employee Added",
+          `${form.first_name} ${form.last_name} has been added as ${form.position}.`,
+          "info"
+        );
       }
       setDialogOpen(false);
     } catch (err: any) { toast.error(err.message); }
