@@ -16,50 +16,13 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: "info" | "success" | "warning" | "error";
-  timestamp: Date;
-  read: boolean;
-}
-
-const defaultNotifications: Notification[] = [
-  {
-    id: "1",
-    title: "Payroll Processed",
-    message: "March 2026 payroll has been successfully processed for 5 employees.",
-    type: "success",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    read: false,
-  },
-  {
-    id: "2",
-    title: "Loan Payment Due",
-    message: "Employee Juan Dela Cruz has a loan payment due in 3 days.",
-    type: "warning",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    read: false,
-  },
-  {
-    id: "3",
-    title: "New Employee Added",
-    message: "Maria Santos has been added to the employee database.",
-    type: "info",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    read: true,
-  },
-  {
-    id: "4",
-    title: "System Maintenance",
-    message: "Scheduled maintenance completed successfully.",
-    type: "info",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48),
-    read: true,
-  },
-];
+import {
+  useNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  deleteNotification as deleteNotif,
+  clearAllNotifications,
+} from "@/hooks/useNotifications";
 
 const typeIcons = {
   info: Info,
@@ -75,7 +38,8 @@ const typeColors = {
   error: "text-destructive bg-destructive/10",
 };
 
-function formatTimeAgo(date: Date): string {
+function formatTimeAgo(dateStr: string): string {
+  const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -90,34 +54,29 @@ function formatTimeAgo(date: Date): string {
 }
 
 export default function NotificationDropdown() {
-  const [notifications, setNotifications] = useState<Notification[]>(defaultNotifications);
+  const { data: notifications = [], isLoading } = useNotifications();
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const handleNotificationClick = (id: string) => {
-    markAsRead(id);
+  const handleClick = async (id: string) => {
+    const notif = notifications.find((n) => n.id === id);
+    if (notif && !notif.read) await markNotificationRead(id);
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const handleMarkAllRead = async () => {
+    await markAllNotificationsRead();
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteNotif(id);
     if (expandedId === id) setExpandedId(null);
   };
 
-  const clearAll = () => {
-    setNotifications([]);
+  const handleClearAll = async () => {
+    await clearAllNotifications();
     setExpandedId(null);
   };
 
@@ -155,7 +114,7 @@ export default function NotificationDropdown() {
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                onClick={markAllAsRead}
+                onClick={handleMarkAllRead}
               >
                 <Check className="h-3 w-3 mr-1" />
                 Mark all read
@@ -167,14 +126,18 @@ export default function NotificationDropdown() {
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
               <Bell className="h-10 w-10 text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground">No notifications</p>
-              <p className="text-xs text-muted-foreground/60">You're all caught up!</p>
+              <p className="text-sm text-muted-foreground">
+                {isLoading ? "Loading..." : "No notifications"}
+              </p>
+              {!isLoading && (
+                <p className="text-xs text-muted-foreground/60">You're all caught up!</p>
+              )}
             </div>
           ) : (
             <ScrollArea className="max-h-80">
               <div className="divide-y divide-border">
                 {notifications.map((notification) => {
-                  const Icon = typeIcons[notification.type];
+                  const Icon = typeIcons[notification.type as keyof typeof typeIcons] || Info;
                   const isExpanded = expandedId === notification.id;
                   return (
                     <Tooltip key={notification.id}>
@@ -185,12 +148,12 @@ export default function NotificationDropdown() {
                             !notification.read && "bg-primary/5",
                             isExpanded && "bg-muted/30"
                           )}
-                          onClick={() => handleNotificationClick(notification.id)}
+                          onClick={() => handleClick(notification.id)}
                         >
                           <div
                             className={cn(
                               "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110",
-                              typeColors[notification.type]
+                              typeColors[notification.type as keyof typeof typeColors] || typeColors.info
                             )}
                           >
                             <Icon className="h-4 w-4" />
@@ -213,13 +176,12 @@ export default function NotificationDropdown() {
                                 className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  deleteNotification(notification.id);
+                                  handleDelete(notification.id);
                                 }}
                               >
                                 <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
                               </Button>
                             </div>
-                            {/* Expanded message shown on click */}
                             <div
                               className={cn(
                                 "overflow-hidden transition-all duration-200",
@@ -233,7 +195,7 @@ export default function NotificationDropdown() {
                             <div className="flex items-center gap-1 mt-1.5">
                               <Clock className="h-3 w-3 text-muted-foreground/60" />
                               <span className="text-[10px] text-muted-foreground/60">
-                                {formatTimeAgo(notification.timestamp)}
+                                {formatTimeAgo(notification.created_at)}
                               </span>
                               {!notification.read && (
                                 <span className="h-1.5 w-1.5 rounded-full bg-primary ml-1" />
@@ -266,7 +228,7 @@ export default function NotificationDropdown() {
                   variant="ghost"
                   size="sm"
                   className="w-full text-xs text-muted-foreground hover:text-destructive"
-                  onClick={clearAll}
+                  onClick={handleClearAll}
                 >
                   <Trash2 className="h-3 w-3 mr-1.5" />
                   Clear all notifications
