@@ -27,7 +27,7 @@ interface EmployeeForm {
 }
 
 const emptyForm: EmployeeForm = {
-  first_name: "", last_name: "", position: "Cashier", department: "",
+  first_name: "", last_name: "", position: "Cashier",
   basic_salary: "", date_hired: "", email: "", contact_number: "", status: "active",
 };
 
