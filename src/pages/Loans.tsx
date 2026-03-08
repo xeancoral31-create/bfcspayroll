@@ -122,8 +122,14 @@ export default function Loans() {
           start_date: form.start_date || null, remarks: form.remarks || null, status: "active",
         });
         if (error) throw error;
+        const emp = employees?.find((e) => e.id === form.employee_id);
+        const empName = emp ? `${emp.first_name} ${emp.last_name}` : "Unknown";
+        await createNotification(
+          "New Loan Recorded",
+          `${form.loan_type} loan of ₱${amount.toLocaleString()} recorded for ${empName}.`,
+          "warning"
+        );
         toast.success("Loan recorded successfully!");
-      }
       queryClient.invalidateQueries({ queryKey: ["loans"] });
       setDialogOpen(false); setForm(emptyForm);
     } catch (err: any) { toast.error(err.message); }
