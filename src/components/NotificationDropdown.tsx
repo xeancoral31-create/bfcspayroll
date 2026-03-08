@@ -92,6 +92,8 @@ function formatTimeAgo(date: Date): string {
 export default function NotificationDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>(defaultNotifications);
   const [open, setOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
