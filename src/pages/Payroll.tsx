@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useEmployees, usePayrollActions, usePayrollRecords } from "@/hooks/usePayrollData";
 import { useLoans } from "@/pages/Loans";
 import { supabase } from "@/integrations/supabase/client";
+import { createNotification } from "@/hooks/useNotifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,13 @@ export default function Payroll() {
         }).eq("id", loan.id);
       }
       queryClient.invalidateQueries({ queryKey: ["loans"] });
+
+      // Create notification
+      await createNotification(
+        "Payroll Processed",
+        `${period} payroll processed for ${selected?.first_name} ${selected?.last_name}. Net pay: ₱${netPay.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+        "success"
+      );
 
       setOvertime("0"); setAllowances("0"); setSss("0"); setPhilhealth("0"); setPagibig("0"); setTax("0"); setOtherDed("0");
     } catch (err: any) { toast.error(err.message); }

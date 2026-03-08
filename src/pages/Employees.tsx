@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Users, Plus, Pencil, Trash2, Search, Landmark, Download, UserCheck, UserX } from "lucide-react";
 import { toast } from "sonner";
+import { createNotification } from "@/hooks/useNotifications";
 
 interface EmployeeForm {
   first_name: string;
@@ -95,6 +96,11 @@ export default function Employees() {
           email: form.email || undefined, contact_number: form.contact_number || undefined,
           date_hired: form.date_hired || undefined, status: form.status,
         });
+        await createNotification(
+          "New Employee Added",
+          `${form.first_name} ${form.last_name} has been added as ${form.position}.`,
+          "info"
+        );
       }
       setDialogOpen(false);
     } catch (err: any) { toast.error(err.message); }

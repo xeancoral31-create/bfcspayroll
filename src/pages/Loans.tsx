@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Landmark, Plus, Pencil, Trash2, Search, DollarSign, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { createNotification } from "@/hooks/useNotifications";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface LoanForm {
@@ -121,6 +122,13 @@ export default function Loans() {
           start_date: form.start_date || null, remarks: form.remarks || null, status: "active",
         });
         if (error) throw error;
+        const emp = employees?.find((e) => e.id === form.employee_id);
+        const empName = emp ? `${emp.first_name} ${emp.last_name}` : "Unknown";
+        await createNotification(
+          "New Loan Recorded",
+          `${form.loan_type} loan of ₱${amount.toLocaleString()} recorded for ${empName}.`,
+          "warning"
+        );
         toast.success("Loan recorded successfully!");
       }
       queryClient.invalidateQueries({ queryKey: ["loans"] });
