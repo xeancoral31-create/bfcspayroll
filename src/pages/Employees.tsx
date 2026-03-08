@@ -19,7 +19,6 @@ interface EmployeeForm {
   first_name: string;
   last_name: string;
   position: string;
-  department: string;
   basic_salary: string;
   date_hired: string;
   email: string;
@@ -28,12 +27,12 @@ interface EmployeeForm {
 }
 
 const emptyForm: EmployeeForm = {
-  first_name: "", last_name: "", position: "Cashier", department: "",
+  first_name: "", last_name: "", position: "Cashier",
   basic_salary: "", date_hired: "", email: "", contact_number: "", status: "active",
 };
 
 const positions = ["Principal", "Janitor", "Teacher", "Cashier", "Administrator", "Maintenance"];
-const departments = ["Administration", "Academic", "Finance", "Maintenance", "Other"];
+
 const statuses = ["active", "inactive"];
 
 export default function Employees() {
@@ -66,7 +65,7 @@ export default function Employees() {
     setEditId(e.id);
     setForm({
       first_name: e.first_name, last_name: e.last_name,
-      position: e.position || "Cashier", department: e.department || "",
+      position: e.position || "Cashier",
       basic_salary: String(e.basic_salary), date_hired: e.date_hired || "",
       email: e.email || "", contact_number: e.contact_number || "",
       status: e.status || "active",
@@ -83,7 +82,7 @@ export default function Employees() {
       if (editId) {
         await updateEmployee(editId, {
           first_name: form.first_name, last_name: form.last_name,
-          position: form.position, department: form.department || null,
+          position: form.position,
           basic_salary: parseFloat(form.basic_salary),
           email: form.email || null, contact_number: form.contact_number || null,
           date_hired: form.date_hired || null, status: form.status,
@@ -115,9 +114,9 @@ export default function Employees() {
 
   const handleExportCSV = () => {
     if (!filtered || filtered.length === 0) return;
-    const headers = ["Employee ID", "First Name", "Last Name", "Position", "Department", "Basic Salary", "Status", "Date Hired", "Email", "Contact"];
+    const headers = ["Employee ID", "First Name", "Last Name", "Position", "Basic Salary", "Status", "Date Hired", "Email", "Contact"];
     const rows = filtered.map(e => [
-      e.employee_id, e.first_name, e.last_name, e.position || "", e.department || "",
+      e.employee_id, e.first_name, e.last_name, e.position || "",
       Number(e.basic_salary).toFixed(2), e.status, e.date_hired || "", e.email || "", e.contact_number || "",
     ]);
     const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
@@ -266,7 +265,6 @@ export default function Employees() {
                     </TableCell>
                     <TableCell>
                       <p className="text-sm text-foreground">{e.position}</p>
-                      <p className="text-[10px] text-muted-foreground">{e.department || "—"}</p>
                     </TableCell>
                     <TableCell className="text-right font-mono font-semibold text-sm text-foreground">₱{Number(e.basic_salary).toLocaleString()}</TableCell>
                     <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">{e.date_hired || "—"}</TableCell>
@@ -332,13 +330,6 @@ export default function Employees() {
                 <Select value={form.position} onValueChange={(v) => setForm({ ...form, position: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs font-semibold">Department</Label>
-                <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>
-                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{departments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
