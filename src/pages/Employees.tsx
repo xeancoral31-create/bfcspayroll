@@ -114,10 +114,9 @@ export default function Employees() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40">
-                <TableHead className="font-bold">ID</TableHead>
                 <TableHead className="font-bold">Name</TableHead>
                 <TableHead className="font-bold">Position</TableHead>
-                <TableHead className="font-bold">Department</TableHead>
+                <TableHead className="font-bold">Role</TableHead>
                 <TableHead className="text-right font-bold">Basic Salary</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
                 <TableHead className="w-20"></TableHead>
@@ -125,13 +124,12 @@ export default function Employees() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
               ) : filtered?.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">No employees found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">No employees found</TableCell></TableRow>
               ) : (
                 filtered?.map((e) => (
                   <TableRow key={e.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="font-mono text-xs font-semibold text-primary">{e.employee_id}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
@@ -187,7 +185,7 @@ export default function Employees() {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs font-semibold">Department</Label>
+                <Label className="text-xs font-semibold">Role</Label>
                 <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{departments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
