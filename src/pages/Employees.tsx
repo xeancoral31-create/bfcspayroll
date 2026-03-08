@@ -236,14 +236,14 @@ export default function Employees() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-16">
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-16">
                   <div className="flex flex-col items-center gap-2">
                     <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                     <p className="text-sm">Loading employees...</p>
                   </div>
                 </TableCell></TableRow>
               ) : filtered?.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-16">
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-16">
                   <div className="flex flex-col items-center gap-2">
                     <Users className="h-10 w-10 text-muted-foreground/20" />
                     <p className="text-sm font-medium">No employees found</p>
