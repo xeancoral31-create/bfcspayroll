@@ -1,6 +1,7 @@
 import { useEmployees, usePayrollRecords } from "@/hooks/usePayrollData";
+import { useLoans } from "@/pages/Loans";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, DollarSign, TrendingUp, Calendar, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Landmark, ArrowUpRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import bfcsLogo from "@/assets/bfcs-logo.png";
 
