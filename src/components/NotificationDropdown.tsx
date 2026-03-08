@@ -191,7 +191,7 @@ export default function NotificationDropdown() {
                       variant="ghost"
                       size="sm"
                       className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                      onClick={handleDeleteAllTrashed}
+                      onClick={() => setConfirmDeleteAll(true)}
                     >
                       <Trash2 className="h-3 w-3 mr-1" />
                       Delete all
