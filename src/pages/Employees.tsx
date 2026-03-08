@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useEmployees, usePayrollActions } from "@/hooks/usePayrollData";
+import { useLoans } from "@/pages/Loans";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Users, Plus, Pencil, Trash2, Search, Eye, Landmark } from "lucide-react";
 import { toast } from "sonner";
 
 interface EmployeeForm {
@@ -41,6 +42,8 @@ export default function Employees() {
   const [search, setSearch] = useState("");
   const [filterPosition, setFilterPosition] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [viewLoanId, setViewLoanId] = useState<string | null>(null);
+  const { data: allLoans } = useLoans();
 
   const filtered = employees?.filter((e) => {
     const matchesSearch = `${e.first_name} ${e.last_name}`.toLowerCase().includes(search.toLowerCase());
@@ -179,6 +182,9 @@ export default function Employees() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setViewLoanId(e.id)} title="View Loans">
+                          <Landmark className="h-3.5 w-3.5" />
+                        </Button>
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(e)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -258,6 +264,54 @@ export default function Employees() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Loan Summary Dialog */}
+      <Dialog open={!!viewLoanId} onOpenChange={(open) => !open && setViewLoanId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-extrabold">
+              <Landmark className="h-4 w-4 text-primary" /> Outstanding Loans
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const emp = employees?.find((e) => e.id === viewLoanId);
+            const empLoans = (allLoans || []).filter((l: any) => l.employee_id === viewLoanId && l.status === "active");
+            const totalOutstanding = empLoans.reduce((s: number, l: any) => s + Number(l.remaining_balance), 0);
+            return (
+              <div className="space-y-3">
+                {emp && (
+                  <div className="rounded-lg bg-muted/40 p-3 border border-border/50">
+                    <p className="text-sm font-bold">{emp.first_name} {emp.last_name}</p>
+                    <p className="text-[11px] text-muted-foreground">{emp.position} • {emp.employee_id}</p>
+                  </div>
+                )}
+                {empLoans.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No active loans</p>
+                ) : (
+                  <div className="space-y-2">
+                    {empLoans.map((loan: any) => (
+                      <div key={loan.id} className="flex justify-between items-center text-sm rounded-md bg-muted/40 px-3 py-2 border border-border/50">
+                        <div>
+                          <p className="font-semibold">{loan.loan_type} Loan</p>
+                          <p className="text-[11px] text-muted-foreground">Monthly: ₱{Number(loan.monthly_deduction).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono font-semibold text-destructive">₱{Number(loan.remaining_balance).toLocaleString()}</p>
+                          <p className="text-[10px] text-muted-foreground">of ₱{Number(loan.amount).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center pt-2 border-t border-border/50 font-bold text-sm">
+                      <span>Total Outstanding</span>
+                      <span className="font-mono text-destructive">₱{totalOutstanding.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

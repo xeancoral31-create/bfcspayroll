@@ -174,6 +174,7 @@ export default function Payslips() {
                   {deductions.pagibig > 0 && <div className="flex justify-between"><span>Pag-IBIG</span><span className="font-mono">₱{Number(deductions.pagibig).toLocaleString()}</span></div>}
                   {deductions.withholding_tax > 0 && <div className="flex justify-between"><span>Withholding Tax</span><span className="font-mono">₱{Number(deductions.withholding_tax).toLocaleString()}</span></div>}
                   {deductions.other > 0 && <div className="flex justify-between"><span>Other</span><span className="font-mono">₱{Number(deductions.other).toLocaleString()}</span></div>}
+                  {deductions.loans > 0 && <div className="flex justify-between"><span>Loan Deductions</span><span className="font-mono">₱{Number(deductions.loans).toLocaleString()}</span></div>}
                   <Separator />
                   <div className="flex justify-between font-bold text-destructive"><span>Total Deductions</span><span className="font-mono">-₱{Number(viewRecord.total_deductions).toLocaleString()}</span></div>
                 </div>
