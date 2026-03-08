@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import Employees from "@/pages/Employees";
 import Payroll from "@/pages/Payroll";
 import Payslips from "@/pages/Payslips";
+import Loans from "@/pages/Loans";
 import Reports from "@/pages/Reports";
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/employees" element={<Employees />} />
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/payslips" element={<Payslips />} />
+            <Route path="/loans" element={<Loans />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
