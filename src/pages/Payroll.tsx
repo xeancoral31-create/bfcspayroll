@@ -226,6 +226,71 @@ export default function Payroll() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Payroll History */}
+      <Card className="border-border/50 overflow-hidden">
+        <CardContent className="p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <History className="h-4 w-4 text-primary" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Payroll History</h3>
+          </div>
+
+          {(() => {
+            const historyRecords = selectedId
+              ? (allRecords || []).filter((r: any) => r.employee_id === selectedId)
+              : (allRecords || []);
+
+            if (historyRecords.length === 0) {
+              return <p className="text-sm text-muted-foreground text-center py-6">No payroll history {selectedId ? "for this employee" : "yet"}</p>;
+            }
+
+            return (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="font-bold">Employee</TableHead>
+                    <TableHead className="font-bold">Period</TableHead>
+                    <TableHead className="text-right font-bold">Gross</TableHead>
+                    <TableHead className="text-right font-bold">Gov't Ded.</TableHead>
+                    <TableHead className="text-right font-bold">Loan Ded.</TableHead>
+                    <TableHead className="text-right font-bold">Net Pay</TableHead>
+                    <TableHead className="font-bold">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {historyRecords.map((r: any) => {
+                    const ded = typeof r.deductions === "object" ? r.deductions : {};
+                    const govtDed = (Number(ded.sss || 0) + Number(ded.philhealth || 0) + Number(ded.pagibig || 0) + Number(ded.withholding_tax || 0) + Number(ded.other || 0));
+                    const loanDed = Number(ded.loans || 0);
+                    return (
+                      <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                              {r.employees?.first_name?.[0]}{r.employees?.last_name?.[0]}
+                            </div>
+                            <span className="text-sm font-semibold">{r.employees?.first_name} {r.employees?.last_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">{r.period}</TableCell>
+                        <TableCell className="text-right font-mono text-sm">₱{Number(r.gross_pay).toLocaleString()}</TableCell>
+                        <TableCell className="text-right font-mono text-sm text-destructive">
+                          {govtDed > 0 ? `-₱${govtDed.toLocaleString()}` : "—"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm text-destructive">
+                          {loanDed > 0 ? `-₱${loanDed.toLocaleString()}` : "—"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm font-bold text-success">₱{Number(r.net_pay).toLocaleString()}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{format(new Date(r.created_at), "MMM d, yyyy")}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            );
+          })()}
+        </CardContent>
+      </Card>
     </div>
   );
 }
