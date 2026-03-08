@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEmployees, usePayrollActions } from "@/hooks/usePayrollData";
+import { useLoans } from "@/pages/Loans";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Calculator, Play } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Payroll() {
   const { data: employees } = useEmployees();
   const { processPayroll } = usePayrollActions();
+  const queryClient = useQueryClient();
   const activeEmployees = employees?.filter((e) => e.status === "active") || [];
 
   const [selectedId, setSelectedId] = useState("");
@@ -26,10 +30,19 @@ export default function Payroll() {
   const [otherDed, setOtherDed] = useState("0");
   const [processing, setProcessing] = useState(false);
 
+  // Fetch active loans for selected employee
+  const { data: activeLoans } = useLoans(selectedId || undefined);
+
   const selected = activeEmployees.find((e) => e.id === selectedId);
   const basicSalary = selected ? Number(selected.basic_salary) : 0;
   const grossPay = basicSalary + Number(overtime || 0) + Number(allowances || 0);
-  const totalDeductions = [sss, philhealth, pagibig, tax, otherDed].reduce((s, v) => s + Number(v || 0), 0);
+
+  const loanDeduction = (activeLoans || []).reduce((sum: number, l: any) => {
+    const ded = Math.min(Number(l.monthly_deduction), Number(l.remaining_balance));
+    return sum + ded;
+  }, 0);
+
+  const totalDeductions = [sss, philhealth, pagibig, tax, otherDed].reduce((s, v) => s + Number(v || 0), 0) + loanDeduction;
   const netPay = grossPay - totalDeductions;
 
   const handleProcess = async () => {
@@ -43,11 +56,24 @@ export default function Payroll() {
         allowances: Number(allowances || 0),
         deductions: {
           sss: Number(sss || 0), philhealth: Number(philhealth || 0),
-          pagibig: Number(pagibig || 0), withholding_tax: Number(tax || 0), other: Number(otherDed || 0),
+          pagibig: Number(pagibig || 0), withholding_tax: Number(tax || 0),
+          other: Number(otherDed || 0), loans: loanDeduction,
         },
         period,
         period_type: periodType,
       });
+
+      // Update loan remaining balances
+      for (const loan of (activeLoans || [])) {
+        const ded = Math.min(Number(loan.monthly_deduction), Number(loan.remaining_balance));
+        const newBalance = Math.round((Number(loan.remaining_balance) - ded) * 100) / 100;
+        await (supabase as any).from("loans").update({
+          remaining_balance: newBalance,
+          status: newBalance <= 0 ? "paid" : "active",
+        }).eq("id", loan.id);
+      }
+      queryClient.invalidateQueries({ queryKey: ["loans"] });
+
       // Reset
       setOvertime("0"); setAllowances("0"); setSss("0"); setPhilhealth("0"); setPagibig("0"); setTax("0"); setOtherDed("0");
     } catch (err: any) { toast.error(err.message); }
@@ -62,7 +88,7 @@ export default function Payroll() {
         </div>
         <div>
           <h1 className="text-lg font-extrabold text-foreground">Run Payroll</h1>
-          <p className="text-xs text-muted-foreground">Process salary for cashier staff</p>
+          <p className="text-xs text-muted-foreground">Process salary for staff</p>
         </div>
       </div>
 
@@ -70,7 +96,6 @@ export default function Payroll() {
         {/* Input Panel */}
         <Card className="lg:col-span-3 border-border/50">
           <CardContent className="p-5 space-y-4">
-            {/* Employee & Period */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-semibold">Employee</Label>
@@ -135,6 +160,27 @@ export default function Payroll() {
                 <div><Label className="text-[11px] text-muted-foreground">Other Deductions</Label><Input type="number" value={otherDed} onChange={(e) => setOtherDed(e.target.value)} min="0" /></div>
               </div>
             </div>
+
+            {/* Loan Deductions (auto) */}
+            {selectedId && (activeLoans || []).length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Loan Deductions (Auto)</p>
+                  <div className="space-y-1.5">
+                    {(activeLoans || []).map((loan: any) => {
+                      const ded = Math.min(Number(loan.monthly_deduction), Number(loan.remaining_balance));
+                      return (
+                        <div key={loan.id} className="flex justify-between items-center text-sm rounded-md bg-muted/40 px-3 py-1.5 border border-border/50">
+                          <span className="text-muted-foreground">{loan.loan_type} Loan</span>
+                          <span className="font-mono font-semibold text-destructive">-₱{ded.toLocaleString()}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -146,7 +192,7 @@ export default function Payroll() {
             {selected && (
               <div className="rounded-lg bg-muted/40 p-3 border border-border/50">
                 <p className="text-sm font-bold">{selected.first_name} {selected.last_name}</p>
-                <p className="text-[11px] text-muted-foreground">{selected.position} · {selected.department}</p>
+                <p className="text-[11px] text-muted-foreground">{selected.position}</p>
               </div>
             )}
 
@@ -157,7 +203,11 @@ export default function Payroll() {
               <Separator />
               <div className="flex justify-between font-semibold"><span>Gross Pay</span><span className="font-mono text-primary">₱{grossPay.toLocaleString()}</span></div>
               <Separator />
-              <div className="flex justify-between text-destructive"><span>Total Deductions</span><span className="font-mono">-₱{totalDeductions.toLocaleString()}</span></div>
+              <div className="flex justify-between text-destructive"><span>Gov't Deductions</span><span className="font-mono">-₱{([sss, philhealth, pagibig, tax, otherDed].reduce((s, v) => s + Number(v || 0), 0)).toLocaleString()}</span></div>
+              {loanDeduction > 0 && (
+                <div className="flex justify-between text-destructive"><span>Loan Deductions</span><span className="font-mono">-₱{loanDeduction.toLocaleString()}</span></div>
+              )}
+              <div className="flex justify-between text-destructive font-semibold"><span>Total Deductions</span><span className="font-mono">-₱{totalDeductions.toLocaleString()}</span></div>
               <Separator />
               <div className="flex justify-between text-lg font-extrabold">
                 <span>Net Pay</span>
