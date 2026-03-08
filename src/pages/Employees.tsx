@@ -28,8 +28,7 @@ const emptyForm: EmployeeForm = {
   basic_salary: "", email: "", contact_number: "", date_hired: "",
 };
 
-const positions = ["Head Cashier", "Senior Cashier", "Cashier", "Junior Cashier", "Cashier Trainee"];
-const departments = ["Cashier Department", "Finance Office", "Canteen", "School Store", "Events"];
+const positions = ["Principal", "Janitor", "Teacher", "Cashier", "Administrator"];
 
 export default function Employees() {
   const { data: employees, isLoading } = useEmployees();
