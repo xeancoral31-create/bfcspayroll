@@ -172,6 +172,45 @@ export type Database = {
           },
         ]
       }
+      products: {
+        Row: {
+          barcode: string | null
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price: number
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price?: number
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price?: number
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -199,6 +238,48 @@ export type Database = {
           role?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount_paid: number
+          change_amount: number
+          created_at: string
+          discount: number
+          id: string
+          items: Json
+          payment_method: string
+          status: string
+          subtotal: number
+          tax: number
+          total: number
+        }
+        Insert: {
+          amount_paid?: number
+          change_amount?: number
+          created_at?: string
+          discount?: number
+          id?: string
+          items?: Json
+          payment_method?: string
+          status?: string
+          subtotal?: number
+          tax?: number
+          total?: number
+        }
+        Update: {
+          amount_paid?: number
+          change_amount?: number
+          created_at?: string
+          discount?: number
+          id?: string
+          items?: Json
+          payment_method?: string
+          status?: string
+          subtotal?: number
+          tax?: number
+          total?: number
         }
         Relationships: []
       }
