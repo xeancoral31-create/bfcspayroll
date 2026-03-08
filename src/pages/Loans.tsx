@@ -37,7 +37,7 @@ function useLoans() {
   return useQuery({
     queryKey: ["loans"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("loans")
         .select("*, employees(first_name, last_name)")
         .order("created_at", { ascending: false });
