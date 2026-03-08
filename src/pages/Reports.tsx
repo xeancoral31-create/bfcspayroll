@@ -62,7 +62,10 @@ export default function Reports() {
     acc[type].remaining += Number(l.remaining_balance);
     return acc;
   }, {} as Record<string, any>);
-  const loanTypeData = Object.entries(loansByType).map(([name, v]) => ({ name, count: v.count, amount: v.amount, remaining: v.remaining }));
+  const loanTypeData = Object.entries(loansByType).map(([name, v]) => {
+    const val = v as { count: number; amount: number; remaining: number };
+    return { name, count: val.count, amount: val.amount, remaining: val.remaining };
+  });
 
   // Department expense
   const deptExpense = records?.reduce((acc: Record<string, number>, r: any) => {
