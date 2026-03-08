@@ -106,12 +106,14 @@ export default function NotificationDropdown() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const handleNotificationClick = (id: string) => {
+    markAsRead(id);
+    setExpandedId(expandedId === id ? null : id);
   };
 
-  const clearAll = () => {
-    setNotifications([]);
+  const deleteNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (expandedId === id) setExpandedId(null);
   };
 
   return (
