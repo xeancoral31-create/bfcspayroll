@@ -42,6 +42,7 @@ export function usePayrollActions() {
     email?: string;
     contact_number?: string;
     date_hired?: string;
+    status?: string;
   }) => {
     const { error } = await supabase.from("employees").insert({
       ...employee,
