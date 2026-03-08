@@ -65,7 +65,7 @@ export default function Employees() {
       if (editId) {
         await updateEmployee(editId, {
           employee_id: form.employee_id, first_name: form.first_name, last_name: form.last_name,
-          position: form.position, department: form.department, basic_salary: parseFloat(form.basic_salary),
+          position: form.position, basic_salary: parseFloat(form.basic_salary),
           email: form.email || null, contact_number: form.contact_number || null, date_hired: form.date_hired || null,
         });
       } else {
