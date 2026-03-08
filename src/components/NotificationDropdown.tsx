@@ -61,6 +61,7 @@ export default function NotificationDropdown() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showTrash, setShowTrash] = useState(false);
   const [trashedItems, setTrashedItems] = useState<Notification[]>([]);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
