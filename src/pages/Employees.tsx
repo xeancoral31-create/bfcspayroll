@@ -50,7 +50,7 @@ export default function Employees() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const filtered = employees?.filter((e) => {
-    const matchesSearch = `${e.first_name} ${e.last_name} ${e.employee_id}`.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = `${e.first_name} ${e.last_name}`.toLowerCase().includes(search.toLowerCase());
     const matchesPosition = filterPosition === "all" || e.position === filterPosition;
     const matchesStatus = filterStatus === "all" || e.status === filterStatus;
     return matchesSearch && matchesPosition && matchesStatus;
