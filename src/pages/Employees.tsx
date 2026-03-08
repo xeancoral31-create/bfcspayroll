@@ -182,7 +182,7 @@ export default function Employees() {
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(e)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDelete(e.id)}>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => setDeleteId(e.id)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
