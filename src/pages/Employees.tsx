@@ -16,7 +16,7 @@ interface EmployeeForm {
   first_name: string;
   last_name: string;
   position: string;
-  department: string;
+  
   basic_salary: string;
   email: string;
   contact_number: string;
