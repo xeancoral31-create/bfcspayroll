@@ -25,7 +25,7 @@ interface EmployeeForm {
 
 const emptyForm: EmployeeForm = {
   employee_id: "", first_name: "", last_name: "", position: "Cashier",
-  department: "Cashier Department", basic_salary: "", email: "", contact_number: "", date_hired: "",
+  basic_salary: "", email: "", contact_number: "", date_hired: "",
 };
 
 const positions = ["Head Cashier", "Senior Cashier", "Cashier", "Junior Cashier", "Cashier Trainee"];
