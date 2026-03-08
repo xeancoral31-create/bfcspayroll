@@ -70,7 +70,7 @@ export default function Loans() {
     try {
       const amount = parseFloat(form.amount);
       const monthlyDeduction = parseFloat(form.monthly_deduction);
-      const { error } = await supabase.from("loans").insert({
+      const { error } = await (supabase as any).from("loans").insert({
         employee_id: form.employee_id,
         loan_type: form.loan_type,
         amount,
