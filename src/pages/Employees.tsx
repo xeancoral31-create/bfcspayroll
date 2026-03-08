@@ -32,7 +32,7 @@ const emptyForm: EmployeeForm = {
 };
 
 const positions = ["Principal", "Janitor", "Teacher", "Cashier", "Administrator", "Maintenance"];
-const departments = ["Administration", "Academic", "Finance", "Maintenance", "Other"];
+
 const statuses = ["active", "inactive"];
 
 export default function Employees() {
