@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useEmployees, usePayrollActions, usePayrollRecords } from "@/hooks/usePayrollData";
 import { useLoans } from "@/pages/Loans";
 import { supabase } from "@/integrations/supabase/client";
+import { createNotification } from "@/hooks/useNotifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
