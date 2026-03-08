@@ -38,10 +38,15 @@ export default function Employees() {
   const [form, setForm] = useState<EmployeeForm>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [filterPosition, setFilterPosition] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
 
-  const filtered = employees?.filter((e) =>
-    `${e.first_name} ${e.last_name}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = employees?.filter((e) => {
+    const matchesSearch = `${e.first_name} ${e.last_name}`.toLowerCase().includes(search.toLowerCase());
+    const matchesPosition = filterPosition === "all" || e.position === filterPosition;
+    const matchesStatus = filterStatus === "all" || e.status === filterStatus;
+    return matchesSearch && matchesPosition && matchesStatus;
+  });
 
   const openAdd = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
 
