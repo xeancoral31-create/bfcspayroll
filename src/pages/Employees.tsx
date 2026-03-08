@@ -185,7 +185,7 @@ export default function Employees() {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs font-semibold">Department</Label>
+                <Label className="text-xs font-semibold">Role</Label>
                 <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{departments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
