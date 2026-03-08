@@ -49,6 +49,13 @@ export function useLoans(employeeId?: string) {
   });
 }
 
+// Color-blind safe status indicators with shape + label
+const statusConfig: Record<string, { variant: "secondary" | "default" | "destructive"; dot: string; label: string }> = {
+  active: { variant: "secondary", dot: "bg-primary", label: "Active" },
+  paid: { variant: "default", dot: "bg-success", label: "Paid" },
+  cancelled: { variant: "destructive", dot: "bg-destructive", label: "Cancelled" },
+};
+
 export default function Loans() {
   const { data: employees } = useEmployees();
   const { data: loans, isLoading } = useLoans();
@@ -138,16 +145,16 @@ export default function Loans() {
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-primary/10 p-2.5">
+          <div className="rounded-lg bg-primary/10 p-2.5">
             <Landmark className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-lg font-extrabold text-foreground">Loans</h1>
+            <h1 className="text-lg font-bold text-foreground">Loans</h1>
             <p className="text-xs text-muted-foreground">{loans?.length || 0} loans recorded</p>
           </div>
         </div>
-        <Button onClick={openAdd} className="font-semibold">
-          <Plus className="h-4 w-4 mr-1.5" /> Add Loan
+        <Button onClick={openAdd} className="font-semibold gap-2">
+          <Plus className="h-4 w-4" /> Add Loan
         </Button>
       </div>
 
@@ -156,19 +163,19 @@ export default function Loans() {
         <Input placeholder="Search loans..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
 
-      <Card className="border-border/50 overflow-hidden">
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/40">
-                <TableHead className="font-bold">Employee</TableHead>
-                <TableHead className="font-bold">Loan Type</TableHead>
-                <TableHead className="text-right font-bold">Amount</TableHead>
-                <TableHead className="text-right font-bold">Monthly Ded.</TableHead>
-                <TableHead className="text-right font-bold">Remaining</TableHead>
-                <TableHead className="font-bold">Start Date</TableHead>
-                <TableHead className="font-bold">Status</TableHead>
-                <TableHead className="font-bold">Remarks</TableHead>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="font-semibold text-xs uppercase tracking-wider">Employee</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider">Loan Type</TableHead>
+                <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Amount</TableHead>
+                <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Monthly Ded.</TableHead>
+                <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Remaining</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider">Start Date</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider">Status</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider">Remarks</TableHead>
                 <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
@@ -178,32 +185,36 @@ export default function Loans() {
               ) : filtered?.length === 0 ? (
                 <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-12">No loans found</TableCell></TableRow>
               ) : (
-                filtered?.map((loan: any) => (
-                  <TableRow key={loan.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="font-semibold text-sm">{loan.employees?.first_name} {loan.employees?.last_name}</TableCell>
-                    <TableCell className="text-sm">{loan.loan_type}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-sm">₱{Number(loan.amount).toLocaleString()}</TableCell>
-                    <TableCell className="text-right font-mono text-sm">₱{Number(loan.monthly_deduction).toLocaleString()}</TableCell>
-                    <TableCell className="text-right font-mono text-sm">₱{Number(loan.remaining_balance).toLocaleString()}</TableCell>
-                    <TableCell className="text-sm">{loan.start_date || "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={loan.status === "active" ? "secondary" : loan.status === "paid" ? "default" : "destructive"} className="text-[10px] font-semibold uppercase">
-                        {loan.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{loan.remarks || "—"}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(loan)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => setDeleteId(loan.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                filtered?.map((loan: any) => {
+                  const sc = statusConfig[loan.status] || statusConfig.active;
+                  return (
+                    <TableRow key={loan.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="font-semibold text-sm">{loan.employees?.first_name} {loan.employees?.last_name}</TableCell>
+                      <TableCell className="text-sm">{loan.loan_type}</TableCell>
+                      <TableCell className="text-right font-mono font-semibold text-sm">₱{Number(loan.amount).toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono text-sm">₱{Number(loan.monthly_deduction).toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono text-sm">₱{Number(loan.remaining_balance).toLocaleString()}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{loan.start_date || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant={sc.variant} className="text-[10px] font-semibold uppercase gap-1">
+                          <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
+                          {sc.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[120px] truncate">{loan.remarks || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(loan)} title="Edit">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(loan.id)} title="Delete">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -214,9 +225,9 @@ export default function Loans() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-extrabold">{editId ? "Edit Loan" : "Add New Loan"}</DialogTitle>
+            <DialogTitle className="font-bold">{editId ? "Edit Loan" : "Add New Loan"}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-3 py-2">
+          <div className="grid gap-4 py-2">
             <div>
               <Label className="text-xs font-semibold">Employee *</Label>
               <Select value={form.employee_id} onValueChange={(v) => setForm({ ...form, employee_id: v })} disabled={!!editId}>

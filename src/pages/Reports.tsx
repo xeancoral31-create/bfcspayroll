@@ -1,15 +1,26 @@
+import { useRef } from "react";
 import { useEmployees, usePayrollRecords } from "@/hooks/usePayrollData";
 import { useLoans } from "@/pages/Loans";
 import { Card, CardContent } from "@/components/ui/card";
-import { BarChart3, Landmark, DollarSign, FileText } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend, AreaChart, Area } from "recharts";
+import { Button } from "@/components/ui/button";
+import { BarChart3, Landmark, DollarSign, FileText, Printer, Download } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area } from "recharts";
 
-const COLORS = ["hsl(225, 75%, 45%)", "hsl(0, 78%, 52%)", "hsl(152, 60%, 40%)", "hsl(38, 92%, 50%)", "hsl(280, 60%, 50%)", "hsl(190, 70%, 45%)"];
+// Color-blind safe palette
+const CB_COLORS = [
+  "hsl(220, 70%, 42%)",
+  "hsl(28, 85%, 52%)",
+  "hsl(198, 65%, 38%)",
+  "hsl(38, 88%, 50%)",
+  "hsl(270, 50%, 55%)",
+  "hsl(180, 50%, 40%)",
+];
 
 export default function Reports() {
   const { data: employees } = useEmployees();
   const { data: records } = usePayrollRecords();
   const { data: loans } = useLoans();
+  const reportRef = useRef<HTMLDivElement>(null);
 
   // Monthly expense trend
   const monthlyExpense = records?.reduce((acc: Record<string, { gross: number; deductions: number; net: number; loanDed: number; govtDed: number }>, r) => {
@@ -25,7 +36,7 @@ export default function Reports() {
   }, {} as Record<string, any>);
   const monthlyData = Object.entries(monthlyExpense || {}).map(([month, v]) => ({ month, ...v })).slice(-12);
 
-  // Deductions breakdown (aggregate)
+  // Deductions breakdown
   const deductionTotals = records?.reduce((acc: Record<string, number>, r) => {
     const ded = typeof r.deductions === "object" ? (r.deductions as any) : {};
     acc.sss = (acc.sss || 0) + Number(ded.sss || 0);
@@ -89,73 +100,196 @@ export default function Reports() {
   const totalDisbursed = records?.reduce((s, r) => s + Number(r.net_pay), 0) || 0;
   const totalDeductions = records?.reduce((s, r) => s + Number(r.total_deductions), 0) || 0;
 
-  return (
-    <div className="space-y-5 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <div className="rounded-xl bg-primary/10 p-2.5">
-          <BarChart3 className="h-5 w-5 text-primary" />
+  const handlePrint = () => {
+    const content = reportRef.current;
+    if (!content) return;
+    const win = window.open("", "_blank", "width=1000,height=800");
+    if (!win) return;
+    win.document.write(`
+      <html><head><title>BFCS Payroll Reports</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif; padding: 32px; color: #1a1e2e; font-size: 13px; }
+        h1 { font-size: 18px; color: #1a5fb4; margin-bottom: 4px; }
+        h2 { font-size: 14px; color: #333; margin: 20px 0 8px; }
+        .subtitle { font-size: 11px; color: #666; margin-bottom: 20px; }
+        .stats { display: flex; gap: 16px; margin-bottom: 24px; }
+        .stat-card { flex: 1; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; }
+        .stat-value { font-size: 20px; font-weight: 700; }
+        .stat-label { font-size: 11px; color: #666; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+        th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 12px; }
+        th { background: #f5f5f8; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+        .text-right { text-align: right; }
+        .mono { font-family: 'IBM Plex Mono', monospace; }
+        .footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 10px; color: #999; }
+        @media print { body { padding: 16px; } }
+      </style></head><body>
+      <h1>BFCS Payroll Reports</h1>
+      <p class="subtitle">Butuan Faith Christian School — Generated on ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
+      
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value mono">₱${totalDisbursed.toLocaleString()}</div>
+          <div class="stat-label">Total Disbursed</div>
         </div>
-        <div>
-          <h1 className="text-lg font-extrabold text-foreground">Payroll Reports</h1>
-          <p className="text-xs text-muted-foreground">Analytics & summaries for BFCS payroll</p>
+        <div class="stat-card">
+          <div class="stat-value mono">₱${totalDeductions.toLocaleString()}</div>
+          <div class="stat-label">Total Deductions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${activeLoans.length}</div>
+          <div class="stat-label">Active Loans (₱${totalRemaining.toLocaleString()} outstanding)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${records?.length || 0}</div>
+          <div class="stat-label">Payroll Records (${totalActive} active employees)</div>
+        </div>
+      </div>
+
+      <h2>Deductions Breakdown</h2>
+      <table>
+        <thead><tr><th>Category</th><th class="text-right">Amount</th><th class="text-right">% of Total</th></tr></thead>
+        <tbody>
+          ${deductionPieData.map(d => {
+            const pct = totalDeductions > 0 ? ((d.value / totalDeductions) * 100).toFixed(1) : "0";
+            return `<tr><td>${d.name}</td><td class="text-right mono">₱${d.value.toLocaleString()}</td><td class="text-right">${pct}%</td></tr>`;
+          }).join("")}
+          <tr style="font-weight:700; border-top: 2px solid #333;"><td>Total</td><td class="text-right mono">₱${totalDeductions.toLocaleString()}</td><td class="text-right">100%</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Loans by Type</h2>
+      <table>
+        <thead><tr><th>Type</th><th class="text-right">Count</th><th class="text-right">Total Amount</th><th class="text-right">Remaining</th></tr></thead>
+        <tbody>
+          ${loanTypeData.map(d => `<tr><td>${d.name}</td><td class="text-right">${d.count}</td><td class="text-right mono">₱${d.amount.toLocaleString()}</td><td class="text-right mono">₱${d.remaining.toLocaleString()}</td></tr>`).join("")}
+        </tbody>
+      </table>
+
+      <h2>Top Earners (Cumulative)</h2>
+      <table>
+        <thead><tr><th>Employee</th><th class="text-right">Total Net Pay</th></tr></thead>
+        <tbody>
+          ${(topEarners as any[]).map((e: any) => `<tr><td>${e.name}</td><td class="text-right mono">₱${e.total.toLocaleString()}</td></tr>`).join("")}
+        </tbody>
+      </table>
+
+      <div class="footer">
+        <p>BFCS Payroll System — This report was generated automatically. For inquiries, contact the Finance Office.</p>
+      </div>
+      </body></html>
+    `);
+    win.document.close();
+    win.print();
+  };
+
+  const handleExportCSV = () => {
+    if (!records || records.length === 0) { return; }
+    const headers = ["Employee", "Period", "Gross Pay", "Total Deductions", "Net Pay", "Status", "Date"];
+    const rows = records.map((r: any) => [
+      `${r.employees?.first_name || ""} ${r.employees?.last_name || ""}`,
+      r.period,
+      Number(r.gross_pay).toFixed(2),
+      Number(r.total_deductions).toFixed(2),
+      Number(r.net_pay).toFixed(2),
+      r.status,
+      new Date(r.created_at).toLocaleDateString(),
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bfcs-payroll-report-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const tooltipStyle = {
+    borderRadius: "8px",
+    border: "1px solid hsl(220, 14%, 89%)",
+    boxShadow: "0 4px 12px hsl(222, 28%, 14%, 0.08)",
+    fontSize: "12px",
+  };
+
+  return (
+    <div className="space-y-5 animate-fade-in" ref={reportRef}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-primary/10 p-2.5">
+            <BarChart3 className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Payroll Reports</h1>
+            <p className="text-xs text-muted-foreground">Analytics & summaries for BFCS payroll</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV} className="font-semibold gap-2 text-sm">
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
+          <Button onClick={handlePrint} className="font-semibold gap-2 text-sm">
+            <Printer className="h-4 w-4" /> Print Report
+          </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-success" />
+              <DollarSign className="h-4 w-4 text-primary" />
               <p className="text-xs text-muted-foreground font-medium">Total Disbursed</p>
             </div>
-            <p className="text-2xl font-extrabold text-success">₱{totalDisbursed.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-primary font-mono">₱{totalDisbursed.toLocaleString()}</p>
           </CardContent>
         </Card>
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
-              <FileText className="h-4 w-4 text-destructive" />
+              <FileText className="h-4 w-4 text-accent" />
               <p className="text-xs text-muted-foreground font-medium">Total Deductions</p>
             </div>
-            <p className="text-2xl font-extrabold text-destructive">₱{totalDeductions.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-accent font-mono">₱{totalDeductions.toLocaleString()}</p>
           </CardContent>
         </Card>
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <Landmark className="h-4 w-4 text-primary" />
               <p className="text-xs text-muted-foreground font-medium">Active Loans</p>
             </div>
-            <p className="text-2xl font-extrabold text-foreground">{activeLoans.length}</p>
+            <p className="text-2xl font-bold text-foreground">{activeLoans.length}</p>
             <p className="text-[10px] text-muted-foreground">₱{totalRemaining.toLocaleString()} outstanding</p>
           </CardContent>
         </Card>
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <BarChart3 className="h-4 w-4 text-primary" />
               <p className="text-xs text-muted-foreground font-medium">Payroll Records</p>
             </div>
-            <p className="text-2xl font-extrabold text-foreground">{records?.length || 0}</p>
+            <p className="text-2xl font-bold text-foreground">{records?.length || 0}</p>
             <p className="text-[10px] text-muted-foreground">{totalActive} active employees</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Monthly Payroll Trend */}
-      <Card className="border-border/50">
+      <Card>
         <CardContent className="p-5">
-          <h3 className="text-sm font-bold text-card-foreground mb-4">Monthly Payroll Expenses</h3>
+          <h3 className="text-sm font-semibold text-card-foreground mb-4">Monthly Payroll Expenses</h3>
           {monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={monthlyData}>
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: number, name: string) => [`₱${v.toLocaleString()}`, name]} />
-                <Area type="monotone" dataKey="gross" stroke="hsl(225, 75%, 45%)" fill="hsl(225, 75%, 45%)" fillOpacity={0.1} strokeWidth={2} name="Gross Pay" />
-                <Area type="monotone" dataKey="net" stroke="hsl(152, 60%, 40%)" fill="hsl(152, 60%, 40%)" fillOpacity={0.1} strokeWidth={2} name="Net Pay" />
-                <Area type="monotone" dataKey="deductions" stroke="hsl(0, 78%, 52%)" fill="hsl(0, 78%, 52%)" fillOpacity={0.05} strokeWidth={2} name="Total Deductions" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(220, 8%, 46%)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "hsl(220, 8%, 46%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v: number, name: string) => [`₱${v.toLocaleString()}`, name]} contentStyle={tooltipStyle} />
+                <Area type="monotone" dataKey="gross" stroke="hsl(220, 70%, 42%)" fill="hsl(220, 70%, 42%)" fillOpacity={0.1} strokeWidth={2} name="Gross Pay" />
+                <Area type="monotone" dataKey="net" stroke="hsl(198, 65%, 38%)" fill="hsl(198, 65%, 38%)" fillOpacity={0.1} strokeWidth={2} name="Net Pay" />
+                <Area type="monotone" dataKey="deductions" stroke="hsl(28, 85%, 52%)" fill="hsl(28, 85%, 52%)" fillOpacity={0.05} strokeWidth={2} name="Total Deductions" />
                 <Legend />
               </AreaChart>
             </ResponsiveContainer>
@@ -167,25 +301,24 @@ export default function Reports() {
 
       {/* Deductions Breakdown + Loan Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Deductions Pie */}
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-card-foreground mb-4">Deductions Breakdown</h3>
+            <h3 className="text-sm font-semibold text-card-foreground mb-4">Deductions Breakdown</h3>
             {deductionPieData.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie data={deductionPieData} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                      {deductionPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      {deductionPieData.map((_, i) => <Cell key={i} fill={CB_COLORS[i % CB_COLORS.length]} />)}
                     </Pie>
-                    <Tooltip formatter={(v: number) => [`₱${v.toLocaleString()}`, "Amount"]} />
+                    <Tooltip formatter={(v: number) => [`₱${v.toLocaleString()}`, "Amount"]} contentStyle={tooltipStyle} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
                   {deductionPieData.map((d, i) => (
                     <span key={d.name} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <span className="h-2 w-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
+                      <span className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ background: CB_COLORS[i % CB_COLORS.length] }} />
                       {d.name}: ₱{d.value.toLocaleString()}
                     </span>
                   ))}
@@ -197,29 +330,26 @@ export default function Reports() {
           </CardContent>
         </Card>
 
-        {/* Loan Statistics */}
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-card-foreground mb-4">Loan Statistics</h3>
+            <h3 className="text-sm font-semibold text-card-foreground mb-4">Loan Statistics</h3>
             {(loans || []).length > 0 ? (
               <div className="space-y-4">
-                {/* Loan summary metrics */}
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-lg bg-muted/40 p-3 border border-border/50 text-center">
-                    <p className="text-lg font-extrabold text-foreground">{(loans || []).length}</p>
+                  <div className="rounded-lg bg-muted/40 p-3 border text-center">
+                    <p className="text-lg font-bold text-foreground">{(loans || []).length}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Total Loans</p>
                   </div>
-                  <div className="rounded-lg bg-muted/40 p-3 border border-border/50 text-center">
-                    <p className="text-lg font-extrabold text-success">{paidLoans.length}</p>
+                  <div className="rounded-lg bg-muted/40 p-3 border text-center">
+                    <p className="text-lg font-bold text-success">{paidLoans.length}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Paid Off</p>
                   </div>
-                  <div className="rounded-lg bg-muted/40 p-3 border border-border/50 text-center">
-                    <p className="text-lg font-extrabold text-destructive">{activeLoans.length}</p>
+                  <div className="rounded-lg bg-muted/40 p-3 border text-center">
+                    <p className="text-lg font-bold text-accent">{activeLoans.length}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Active</p>
                   </div>
                 </div>
 
-                {/* Collection progress */}
                 <div>
                   <div className="flex justify-between text-xs mb-1.5">
                     <span className="text-muted-foreground font-medium">Collection Progress</span>
@@ -234,15 +364,14 @@ export default function Reports() {
                   </div>
                 </div>
 
-                {/* Loans by type bar chart */}
                 {loanTypeData.length > 0 && (
                   <ResponsiveContainer width="100%" height={140}>
                     <BarChart data={loanTypeData}>
-                      <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(v: number) => [`₱${v.toLocaleString()}`, ""]} />
-                      <Bar dataKey="amount" fill="hsl(225, 75%, 45%)" radius={[4, 4, 0, 0]} name="Total Amount" />
-                      <Bar dataKey="remaining" fill="hsl(0, 78%, 52%)" radius={[4, 4, 0, 0]} name="Remaining" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(220, 8%, 46%)" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(220, 8%, 46%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
+                      <Tooltip formatter={(v: number) => [`₱${v.toLocaleString()}`, ""]} contentStyle={tooltipStyle} />
+                      <Bar dataKey="amount" fill="hsl(220, 70%, 42%)" radius={[4, 4, 0, 0]} name="Total Amount" />
+                      <Bar dataKey="remaining" fill="hsl(28, 85%, 52%)" radius={[4, 4, 0, 0]} name="Remaining" />
                       <Legend />
                     </BarChart>
                   </ResponsiveContainer>
@@ -257,17 +386,17 @@ export default function Reports() {
 
       {/* Expense by Position + Top Earners */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-card-foreground mb-4">Expense by Position</h3>
+            <h3 className="text-sm font-semibold text-card-foreground mb-4">Expense by Position</h3>
             {deptData.length > 0 ? (
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie data={deptData} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {deptData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    {deptData.map((_, i) => <Cell key={i} fill={CB_COLORS[i % CB_COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: number) => [`₱${v.toLocaleString()}`, "Amount"]} />
+                  <Tooltip formatter={(v: number) => [`₱${v.toLocaleString()}`, "Amount"]} contentStyle={tooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -276,16 +405,16 @@ export default function Reports() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-card-foreground mb-4">Top Earners (Cumulative)</h3>
+            <h3 className="text-sm font-semibold text-card-foreground mb-4">Top Earners (Cumulative)</h3>
             {topEarners.length > 0 ? (
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={topEarners} layout="vertical">
-                  <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
-                  <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: number) => [`₱${v.toLocaleString()}`, "Total"]} />
-                  <Bar dataKey="total" fill="hsl(225, 75%, 45%)" radius={[0, 6, 6, 0]} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(220, 8%, 46%)" }} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
+                  <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: "hsl(220, 8%, 46%)" }} />
+                  <Tooltip formatter={(v: number) => [`₱${v.toLocaleString()}`, "Total"]} contentStyle={tooltipStyle} />
+                  <Bar dataKey="total" fill="hsl(220, 70%, 42%)" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
