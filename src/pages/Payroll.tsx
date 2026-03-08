@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useEmployees, usePayrollActions, usePayrollRecords } from "@/hooks/usePayrollData";
 import { useLoans } from "@/pages/Loans";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +34,6 @@ export default function Payroll() {
   const [otherDed, setOtherDed] = useState("0");
   const [processing, setProcessing] = useState(false);
 
-  // Fetch active loans for selected employee
   const { data: activeLoans } = useLoans(selectedId || undefined);
 
   const selected = activeEmployees.find((e) => e.id === selectedId);
@@ -67,7 +66,6 @@ export default function Payroll() {
         period_type: periodType,
       });
 
-      // Update loan remaining balances
       for (const loan of (activeLoans || [])) {
         const ded = Math.min(Number(loan.monthly_deduction), Number(loan.remaining_balance));
         const newBalance = Math.round((Number(loan.remaining_balance) - ded) * 100) / 100;
@@ -78,7 +76,6 @@ export default function Payroll() {
       }
       queryClient.invalidateQueries({ queryKey: ["loans"] });
 
-      // Reset
       setOvertime("0"); setAllowances("0"); setSss("0"); setPhilhealth("0"); setPagibig("0"); setTax("0"); setOtherDed("0");
     } catch (err: any) { toast.error(err.message); }
     setProcessing(false);
@@ -87,18 +84,18 @@ export default function Payroll() {
   return (
     <div className="max-w-4xl mx-auto space-y-5 animate-fade-in">
       <div className="flex items-center gap-3">
-        <div className="rounded-xl bg-primary/10 p-2.5">
+        <div className="rounded-lg bg-primary/10 p-2.5">
           <Calculator className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-lg font-extrabold text-foreground">Run Payroll</h1>
-          <p className="text-xs text-muted-foreground">Process salary for staff</p>
+          <h1 className="text-lg font-bold text-foreground">Run Payroll</h1>
+          <p className="text-xs text-muted-foreground">Process salary for staff members</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* Input Panel */}
-        <Card className="lg:col-span-3 border-border/50">
+        <Card className="lg:col-span-3">
           <CardContent className="p-5 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -132,9 +129,8 @@ export default function Payroll() {
 
             <Separator />
 
-            {/* Earnings */}
             <div>
-              <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Earnings</p>
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Earnings</p>
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label className="text-[11px] text-muted-foreground">Basic Salary</Label>
@@ -153,9 +149,8 @@ export default function Payroll() {
 
             <Separator />
 
-            {/* Deductions */}
             <div>
-              <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Deductions</p>
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Deductions</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div><Label className="text-[11px] text-muted-foreground">SSS</Label><Input type="number" value={sss} onChange={(e) => setSss(e.target.value)} min="0" /></div>
                 <div><Label className="text-[11px] text-muted-foreground">PhilHealth</Label><Input type="number" value={philhealth} onChange={(e) => setPhilhealth(e.target.value)} min="0" /></div>
@@ -165,19 +160,18 @@ export default function Payroll() {
               </div>
             </div>
 
-            {/* Loan Deductions (auto) */}
             {selectedId && (activeLoans || []).length > 0 && (
               <>
                 <Separator />
                 <div>
-                  <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Loan Deductions (Auto)</p>
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Loan Deductions (Auto)</p>
                   <div className="space-y-1.5">
                     {(activeLoans || []).map((loan: any) => {
                       const ded = Math.min(Number(loan.monthly_deduction), Number(loan.remaining_balance));
                       return (
-                        <div key={loan.id} className="flex justify-between items-center text-sm rounded-md bg-muted/40 px-3 py-1.5 border border-border/50">
+                        <div key={loan.id} className="flex justify-between items-center text-sm rounded-lg bg-muted/30 px-3 py-2 border">
                           <span className="text-muted-foreground">{loan.loan_type} Loan</span>
-                          <span className="font-mono font-semibold text-destructive">-₱{ded.toLocaleString()}</span>
+                          <span className="font-mono font-semibold text-accent">-₱{ded.toLocaleString()}</span>
                         </div>
                       );
                     })}
@@ -189,12 +183,12 @@ export default function Payroll() {
         </Card>
 
         {/* Summary Panel */}
-        <Card className="lg:col-span-2 border-border/50 h-fit">
+        <Card className="lg:col-span-2 h-fit">
           <CardContent className="p-5 space-y-4">
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Pay Summary</h3>
+            <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Pay Summary</h3>
 
             {selected && (
-              <div className="rounded-lg bg-muted/40 p-3 border border-border/50">
+              <div className="rounded-lg bg-muted/40 p-3 border">
                 <p className="text-sm font-bold">{selected.first_name} {selected.last_name}</p>
                 <p className="text-[11px] text-muted-foreground">{selected.position}</p>
               </div>
@@ -207,20 +201,20 @@ export default function Payroll() {
               <Separator />
               <div className="flex justify-between font-semibold"><span>Gross Pay</span><span className="font-mono text-primary">₱{grossPay.toLocaleString()}</span></div>
               <Separator />
-              <div className="flex justify-between text-destructive"><span>Gov't Deductions</span><span className="font-mono">-₱{([sss, philhealth, pagibig, tax, otherDed].reduce((s, v) => s + Number(v || 0), 0)).toLocaleString()}</span></div>
+              <div className="flex justify-between text-accent"><span>Gov't Deductions</span><span className="font-mono">-₱{([sss, philhealth, pagibig, tax, otherDed].reduce((s, v) => s + Number(v || 0), 0)).toLocaleString()}</span></div>
               {loanDeduction > 0 && (
-                <div className="flex justify-between text-destructive"><span>Loan Deductions</span><span className="font-mono">-₱{loanDeduction.toLocaleString()}</span></div>
+                <div className="flex justify-between text-accent"><span>Loan Deductions</span><span className="font-mono">-₱{loanDeduction.toLocaleString()}</span></div>
               )}
-              <div className="flex justify-between text-destructive font-semibold"><span>Total Deductions</span><span className="font-mono">-₱{totalDeductions.toLocaleString()}</span></div>
+              <div className="flex justify-between text-accent font-semibold"><span>Total Deductions</span><span className="font-mono">-₱{totalDeductions.toLocaleString()}</span></div>
               <Separator />
-              <div className="flex justify-between text-lg font-extrabold">
+              <div className="flex justify-between text-lg font-bold">
                 <span>Net Pay</span>
-                <span className={`font-mono ${netPay >= 0 ? "text-success" : "text-destructive"}`}>₱{netPay.toLocaleString()}</span>
+                <span className={`font-mono ${netPay >= 0 ? "text-primary" : "text-destructive"}`}>₱{netPay.toLocaleString()}</span>
               </div>
             </div>
 
-            <Button onClick={handleProcess} disabled={processing || !selectedId} className="w-full font-bold">
-              <Play className="h-4 w-4 mr-2" />
+            <Button onClick={handleProcess} disabled={processing || !selectedId} className="w-full font-semibold gap-2">
+              <Play className="h-4 w-4" />
               {processing ? "Processing..." : "Process Payroll"}
             </Button>
           </CardContent>
@@ -228,11 +222,11 @@ export default function Payroll() {
       </div>
 
       {/* Payroll History */}
-      <Card className="border-border/50 overflow-hidden">
+      <Card className="overflow-hidden">
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <History className="h-4 w-4 text-primary" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Payroll History</h3>
+            <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Payroll History</h3>
           </div>
 
           {(() => {
@@ -247,14 +241,14 @@ export default function Payroll() {
             return (
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead className="font-bold">Employee</TableHead>
-                    <TableHead className="font-bold">Period</TableHead>
-                    <TableHead className="text-right font-bold">Gross</TableHead>
-                    <TableHead className="text-right font-bold">Gov't Ded.</TableHead>
-                    <TableHead className="text-right font-bold">Loan Ded.</TableHead>
-                    <TableHead className="text-right font-bold">Net Pay</TableHead>
-                    <TableHead className="font-bold">Date</TableHead>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Employee</TableHead>
+                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Period</TableHead>
+                    <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Gross</TableHead>
+                    <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Gov't Ded.</TableHead>
+                    <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Loan Ded.</TableHead>
+                    <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Net Pay</TableHead>
+                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -266,7 +260,7 @@ export default function Payroll() {
                       <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
                               {r.employees?.first_name?.[0]}{r.employees?.last_name?.[0]}
                             </div>
                             <span className="text-sm font-semibold">{r.employees?.first_name} {r.employees?.last_name}</span>
@@ -274,13 +268,13 @@ export default function Payroll() {
                         </TableCell>
                         <TableCell className="text-sm">{r.period}</TableCell>
                         <TableCell className="text-right font-mono text-sm">₱{Number(r.gross_pay).toLocaleString()}</TableCell>
-                        <TableCell className="text-right font-mono text-sm text-destructive">
+                        <TableCell className="text-right font-mono text-sm text-accent">
                           {govtDed > 0 ? `-₱${govtDed.toLocaleString()}` : "—"}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-sm text-destructive">
+                        <TableCell className="text-right font-mono text-sm text-accent">
                           {loanDed > 0 ? `-₱${loanDed.toLocaleString()}` : "—"}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-sm font-bold text-success">₱{Number(r.net_pay).toLocaleString()}</TableCell>
+                        <TableCell className="text-right font-mono text-sm font-bold text-primary">₱{Number(r.net_pay).toLocaleString()}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{format(new Date(r.created_at), "MMM d, yyyy")}</TableCell>
                       </TableRow>
                     );
