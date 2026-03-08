@@ -1,19 +1,21 @@
 import { useEmployees, usePayrollRecords } from "@/hooks/usePayrollData";
+import { useLoans } from "@/pages/Loans";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, DollarSign, TrendingUp, Calendar, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Landmark, ArrowUpRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import bfcsLogo from "@/assets/bfcs-logo.png";
 
 export default function Dashboard() {
   const { data: employees } = useEmployees();
   const { data: records } = usePayrollRecords();
+  const { data: loans } = useLoans();
 
   const activeEmployees = employees?.filter((e) => e.status === "active").length || 0;
   const totalPayroll = records?.reduce((s, r) => s + Number(r.net_pay), 0) || 0;
   const avgSalary = activeEmployees > 0 ? (employees?.reduce((s, e) => s + Number(e.basic_salary), 0) || 0) / activeEmployees : 0;
-  const thisMonth = records?.filter(
-    (r) => new Date(r.created_at).getMonth() === new Date().getMonth()
-  ).length || 0;
+
+  const activeLoans = (loans || []).filter((l: any) => l.status === "active");
+  const totalLoanBalance = activeLoans.reduce((s: number, l: any) => s + Number(l.remaining_balance), 0);
 
   const departmentData = employees?.reduce((acc: Record<string, number>, emp) => {
     const dept = emp.department || "Unassigned";
@@ -60,12 +62,12 @@ export default function Dashboard() {
       color: "bg-warning/10 text-warning",
     },
     {
-      label: "This Month",
-      value: `${thisMonth} processed`,
-      icon: Calendar,
-      change: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-      trend: "up" as const,
-      color: "bg-accent/10 text-accent",
+      label: "Active Loans",
+      value: `${activeLoans.length}`,
+      icon: Landmark,
+      change: `₱${totalLoanBalance.toLocaleString()} outstanding`,
+      trend: activeLoans.length > 0 ? "up" as const : "neutral" as const,
+      color: "bg-destructive/10 text-destructive",
     },
   ];
 
