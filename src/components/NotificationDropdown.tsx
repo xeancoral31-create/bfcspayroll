@@ -115,6 +115,7 @@ export default function NotificationDropdown() {
   const handleDeleteAllTrashed = useCallback(() => {
     setTrashedItems([]);
     setShowTrash(false);
+    setConfirmDeleteAll(false);
   }, []);
 
   // Restore all trashed
