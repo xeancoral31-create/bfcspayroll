@@ -137,7 +137,6 @@ export default function Employees() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{e.position}</TableCell>
-                    <TableCell className="text-sm">{e.department}</TableCell>
                     <TableCell className="text-right font-mono font-semibold text-sm">₱{Number(e.basic_salary).toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge variant={e.status === "active" ? "secondary" : "destructive"} className="text-[10px] font-semibold uppercase">
