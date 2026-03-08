@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, Calculator, FileText, BarChart3, Menu, X, Landmark, Sun, Moon, Shield } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import bfcsLogo from "@/assets/bfcs-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTheme } from "@/hooks/useTheme";
