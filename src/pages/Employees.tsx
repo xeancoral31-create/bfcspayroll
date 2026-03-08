@@ -115,7 +115,6 @@ export default function Employees() {
               <TableRow className="bg-muted/40">
                 <TableHead className="font-bold">Name</TableHead>
                 <TableHead className="font-bold">Position</TableHead>
-                <TableHead className="font-bold">Role</TableHead>
                 <TableHead className="text-right font-bold">Basic Salary</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
                 <TableHead className="w-20"></TableHead>
