@@ -324,14 +324,12 @@ export default function Employees() {
               <div><Label className="text-xs font-semibold">First Name <span className="text-destructive">*</span></Label><Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} placeholder="Juan" /></div>
               <div><Label className="text-xs font-semibold">Last Name <span className="text-destructive">*</span></Label><Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} placeholder="Dela Cruz" /></div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-semibold">Position</Label>
-                <Select value={form.position} onValueChange={(v) => setForm({ ...form, position: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label className="text-xs font-semibold">Position</Label>
+              <Select value={form.position} onValueChange={(v) => setForm({ ...form, position: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
