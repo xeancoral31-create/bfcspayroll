@@ -130,6 +130,7 @@ export default function Loans() {
           "warning"
         );
         toast.success("Loan recorded successfully!");
+      }
       queryClient.invalidateQueries({ queryKey: ["loans"] });
       setDialogOpen(false); setForm(emptyForm);
     } catch (err: any) { toast.error(err.message); }
