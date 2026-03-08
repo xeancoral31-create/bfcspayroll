@@ -82,7 +82,7 @@ export default function Employees() {
       if (editId) {
         await updateEmployee(editId, {
           first_name: form.first_name, last_name: form.last_name,
-          position: form.position, department: form.department || null,
+          position: form.position,
           basic_salary: parseFloat(form.basic_salary),
           email: form.email || null, contact_number: form.contact_number || null,
           date_hired: form.date_hired || null, status: form.status,
