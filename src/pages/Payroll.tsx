@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useEmployees, usePayrollActions } from "@/hooks/usePayrollData";
+import { useEmployees, usePayrollActions, usePayrollRecords } from "@/hooks/usePayrollData";
 import { useLoans } from "@/pages/Loans";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
