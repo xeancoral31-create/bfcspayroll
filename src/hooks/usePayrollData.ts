@@ -38,7 +38,6 @@ export function usePayrollActions() {
     first_name: string;
     last_name: string;
     position: string;
-    department: string;
     basic_salary: number;
     email?: string;
     contact_number?: string;

@@ -16,7 +16,7 @@ interface EmployeeForm {
   first_name: string;
   last_name: string;
   position: string;
-  department: string;
+  
   basic_salary: string;
   email: string;
   contact_number: string;
@@ -25,11 +25,10 @@ interface EmployeeForm {
 
 const emptyForm: EmployeeForm = {
   employee_id: "", first_name: "", last_name: "", position: "Cashier",
-  department: "Cashier Department", basic_salary: "", email: "", contact_number: "", date_hired: "",
+  basic_salary: "", email: "", contact_number: "", date_hired: "",
 };
 
-const positions = ["Head Cashier", "Senior Cashier", "Cashier", "Junior Cashier", "Cashier Trainee"];
-const departments = ["Cashier Department", "Finance Office", "Canteen", "School Store", "Events"];
+const positions = ["Principal", "Janitor", "Teacher", "Cashier", "Administrator"];
 
 export default function Employees() {
   const { data: employees, isLoading } = useEmployees();
@@ -50,7 +49,7 @@ export default function Employees() {
     setEditId(e.id);
     setForm({
       employee_id: e.employee_id, first_name: e.first_name, last_name: e.last_name,
-      position: e.position || "Cashier", department: e.department || "Cashier Department",
+      position: e.position || "Cashier",
       basic_salary: String(e.basic_salary), email: e.email || "", contact_number: e.contact_number || "",
       date_hired: e.date_hired || "",
     });
@@ -66,13 +65,13 @@ export default function Employees() {
       if (editId) {
         await updateEmployee(editId, {
           employee_id: form.employee_id, first_name: form.first_name, last_name: form.last_name,
-          position: form.position, department: form.department, basic_salary: parseFloat(form.basic_salary),
+          position: form.position, basic_salary: parseFloat(form.basic_salary),
           email: form.email || null, contact_number: form.contact_number || null, date_hired: form.date_hired || null,
         });
       } else {
         await addEmployee({
           employee_id: form.employee_id, first_name: form.first_name, last_name: form.last_name,
-          position: form.position, department: form.department, basic_salary: parseFloat(form.basic_salary),
+          position: form.position, basic_salary: parseFloat(form.basic_salary),
           email: form.email || undefined, contact_number: form.contact_number || undefined,
           date_hired: form.date_hired || undefined,
         });
@@ -116,7 +115,6 @@ export default function Employees() {
               <TableRow className="bg-muted/40">
                 <TableHead className="font-bold">Name</TableHead>
                 <TableHead className="font-bold">Position</TableHead>
-                <TableHead className="font-bold">Role</TableHead>
                 <TableHead className="text-right font-bold">Basic Salary</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
                 <TableHead className="w-20"></TableHead>
@@ -124,9 +122,9 @@ export default function Employees() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
               ) : filtered?.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">No employees found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12">No employees found</TableCell></TableRow>
               ) : (
                 filtered?.map((e) => (
                   <TableRow key={e.id} className="hover:bg-muted/30 transition-colors">
@@ -139,7 +137,6 @@ export default function Employees() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{e.position}</TableCell>
-                    <TableCell className="text-sm">{e.department}</TableCell>
                     <TableCell className="text-right font-mono font-semibold text-sm">₱{Number(e.basic_salary).toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge variant={e.status === "active" ? "secondary" : "destructive"} className="text-[10px] font-semibold uppercase">
@@ -176,21 +173,12 @@ export default function Employees() {
               <div><Label className="text-xs font-semibold">First Name *</Label><Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
               <div><Label className="text-xs font-semibold">Last Name *</Label><Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-semibold">Position</Label>
-                <Select value={form.position} onValueChange={(v) => setForm({ ...form, position: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs font-semibold">Role</Label>
-                <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{departments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label className="text-xs font-semibold">Position</Label>
+              <Select value={form.position} onValueChange={(v) => setForm({ ...form, position: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs font-semibold">Basic Salary (₱) *</Label><Input type="number" value={form.basic_salary} onChange={(e) => setForm({ ...form, basic_salary: e.target.value })} /></div>
