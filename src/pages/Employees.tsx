@@ -173,21 +173,12 @@ export default function Employees() {
               <div><Label className="text-xs font-semibold">First Name *</Label><Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
               <div><Label className="text-xs font-semibold">Last Name *</Label><Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-semibold">Position</Label>
-                <Select value={form.position} onValueChange={(v) => setForm({ ...form, position: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs font-semibold">Role</Label>
-                <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{departments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label className="text-xs font-semibold">Position</Label>
+              <Select value={form.position} onValueChange={(v) => setForm({ ...form, position: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs font-semibold">Basic Salary (₱) *</Label><Input type="number" value={form.basic_salary} onChange={(e) => setForm({ ...form, basic_salary: e.target.value })} /></div>
