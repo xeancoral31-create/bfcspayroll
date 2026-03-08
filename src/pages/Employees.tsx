@@ -392,7 +392,7 @@ export default function Employees() {
                 {emp && (
                   <div className="rounded-xl bg-muted/40 p-4 border">
                     <p className="text-sm font-bold text-foreground">{emp.first_name} {emp.last_name}</p>
-                    <p className="text-[11px] text-muted-foreground">{emp.position} · {emp.employee_id}</p>
+                    <p className="text-[11px] text-muted-foreground">{emp.position}</p>
                   </div>
                 )}
                 {empLoans.length === 0 ? (
