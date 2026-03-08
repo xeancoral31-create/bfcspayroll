@@ -227,8 +227,9 @@ export default function Employees() {
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground py-3.5">Employee</TableHead>
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Position</TableHead>
                 <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Basic Salary</TableHead>
-                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground hidden lg:table-cell">Date Hired</TableHead>
-                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground hidden xl:table-cell">Contact</TableHead>
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Date Hired</TableHead>
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Email</TableHead>
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Contact Number</TableHead>
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Status</TableHead>
                 <TableHead className="w-28"></TableHead>
               </TableRow>
