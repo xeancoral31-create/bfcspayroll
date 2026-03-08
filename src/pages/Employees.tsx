@@ -71,7 +71,7 @@ export default function Employees() {
       } else {
         await addEmployee({
           employee_id: form.employee_id, first_name: form.first_name, last_name: form.last_name,
-          position: form.position, department: form.department, basic_salary: parseFloat(form.basic_salary),
+          position: form.position, basic_salary: parseFloat(form.basic_salary),
           email: form.email || undefined, contact_number: form.contact_number || undefined,
           date_hired: form.date_hired || undefined,
         });
