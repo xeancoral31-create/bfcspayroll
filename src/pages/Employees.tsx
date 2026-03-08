@@ -83,6 +83,12 @@ export default function Employees() {
           email: form.email || undefined, contact_number: form.contact_number || undefined,
           date_hired: form.date_hired || undefined,
         });
+        // Update status separately since addEmployee defaults it
+        const { data: newEmp } = await (await import("@/integrations/supabase/client")).supabase
+          .from("employees").select("id").eq("employee_id", autoId).single();
+        if (newEmp && form.status !== "active") {
+          await updateEmployee(newEmp.id, { status: form.status });
+        }
       }
       setDialogOpen(false);
     } catch (err: any) { toast.error(err.message); }
