@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Calculator, FileText, BarChart3, Menu, X, Landmark, Sun, Moon, Bell, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Calculator, FileText, BarChart3, Menu, X, Landmark, Sun, Moon, Shield } from "lucide-react";
 import { useState } from "react";
 import bfcsLogo from "@/assets/bfcs-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import NotificationDropdown from "@/components/NotificationDropdown";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, section: "Overview" },
@@ -153,14 +154,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <span className="text-[10px] font-semibold text-success">Online</span>
             </div>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                  <Bell className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Notifications</TooltipContent>
-            </Tooltip>
+            <NotificationDropdown />
 
             <Tooltip>
               <TooltipTrigger asChild>
