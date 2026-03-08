@@ -21,11 +21,20 @@ const sections = ["Overview", "Management", "Records"];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [today, setToday] = useState(() =>
+    new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+  );
   const location = useLocation();
   const { theme, toggle } = useTheme();
 
   const currentPage = navItems.find((n) => n.to === location.pathname);
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+  useEffect(() => {
+    const update = () =>
+      setToday(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }));
+    const id = setInterval(update, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
