@@ -114,9 +114,9 @@ export default function Employees() {
 
   const handleExportCSV = () => {
     if (!filtered || filtered.length === 0) return;
-    const headers = ["Employee ID", "First Name", "Last Name", "Position", "Basic Salary", "Status", "Date Hired", "Email", "Contact"];
+    const headers = ["First Name", "Last Name", "Position", "Basic Salary", "Status", "Date Hired", "Email", "Contact"];
     const rows = filtered.map(e => [
-      e.employee_id, e.first_name, e.last_name, e.position || "",
+      e.first_name, e.last_name, e.position || "",
       Number(e.basic_salary).toFixed(2), e.status, e.date_hired || "", e.email || "", e.contact_number || "",
     ]);
     const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
