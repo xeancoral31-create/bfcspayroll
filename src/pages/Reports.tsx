@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useEmployees, usePayrollRecords } from "@/hooks/usePayrollData";
 import { useLoans } from "@/pages/Loans";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Landmark, DollarSign, FileText, Printer, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area } from "recharts";
@@ -214,65 +214,63 @@ export default function Reports() {
   };
 
   return (
-    <div className="space-y-5 animate-fade-in" ref={reportRef}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2.5">
-            <BarChart3 className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-foreground">Payroll Reports</h1>
-            <p className="text-xs text-muted-foreground">Analytics & summaries for BFCS payroll</p>
-          </div>
+    <div className="space-y-6" ref={reportRef}>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">Reports & Analytics</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Comprehensive payroll analytics, deduction summaries, and financial insights.
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportCSV} className="font-semibold gap-2 text-sm">
-            <Download className="h-4 w-4" /> Export CSV
+          <Button variant="outline" size="sm" onClick={handleExportCSV} className="font-semibold gap-2 text-xs">
+            <Download className="h-3.5 w-3.5" /> Export CSV
           </Button>
-          <Button onClick={handlePrint} className="font-semibold gap-2 text-sm">
-            <Printer className="h-4 w-4" /> Print Report
+          <Button size="sm" onClick={handlePrint} className="font-semibold gap-2 text-xs">
+            <Printer className="h-3.5 w-3.5" /> Print Report
           </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-primary/15">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-primary" />
-              <p className="text-xs text-muted-foreground font-medium">Total Disbursed</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="rounded-xl bg-primary/8 p-2.5"><DollarSign className="h-5 w-5 text-primary" /></div>
             </div>
-            <p className="text-2xl font-bold text-primary font-mono">₱{totalDisbursed.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-foreground font-mono">₱{totalDisbursed.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1">Total Disbursed</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-accent/15">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <FileText className="h-4 w-4 text-accent" />
-              <p className="text-xs text-muted-foreground font-medium">Total Deductions</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="rounded-xl bg-accent/8 p-2.5"><FileText className="h-5 w-5 text-accent" /></div>
             </div>
-            <p className="text-2xl font-bold text-accent font-mono">₱{totalDeductions.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-foreground font-mono">₱{totalDeductions.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1">Total Deductions</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-warning/15">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Landmark className="h-4 w-4 text-primary" />
-              <p className="text-xs text-muted-foreground font-medium">Active Loans</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="rounded-xl bg-warning/8 p-2.5"><Landmark className="h-5 w-5 text-warning" /></div>
             </div>
             <p className="text-2xl font-bold text-foreground">{activeLoans.length}</p>
-            <p className="text-[10px] text-muted-foreground">₱{totalRemaining.toLocaleString()} outstanding</p>
+            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1">Active Loans</p>
+            <p className="text-[10px] text-muted-foreground/60">₱{totalRemaining.toLocaleString()} outstanding</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-success/15">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <BarChart3 className="h-4 w-4 text-primary" />
-              <p className="text-xs text-muted-foreground font-medium">Payroll Records</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="rounded-xl bg-success/8 p-2.5"><BarChart3 className="h-5 w-5 text-success" /></div>
             </div>
             <p className="text-2xl font-bold text-foreground">{records?.length || 0}</p>
-            <p className="text-[10px] text-muted-foreground">{totalActive} active employees</p>
+            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1">Payroll Records</p>
+            <p className="text-[10px] text-muted-foreground/60">{totalActive} active employees</p>
           </CardContent>
         </Card>
       </div>

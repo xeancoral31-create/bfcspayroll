@@ -247,69 +247,79 @@ export default function Payslips() {
   const deductions = viewRecord ? (typeof viewRecord.deductions === "object" ? viewRecord.deductions : {}) : {};
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <div className="rounded-lg bg-primary/10 p-2.5">
-          <FileText className="h-5 w-5 text-primary" />
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg font-bold text-foreground">Payslips</h1>
-          <p className="text-xs text-muted-foreground">View, edit, and print employee pay receipts</p>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">Payslip Records</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            View, edit, print, and manage employee pay receipts.
+          </p>
         </div>
+        <Badge variant="secondary" className="text-xs font-semibold px-3 py-1.5 self-start">
+          {records?.length || 0} records
+        </Badge>
       </div>
 
-      <Card className="overflow-hidden">
+      {/* Table */}
+      <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="font-semibold text-xs uppercase tracking-wider">Employee</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider">Period</TableHead>
-                <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Gross</TableHead>
-                <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Deductions</TableHead>
-                <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Net Pay</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider">Status</TableHead>
-                <TableHead className="w-28"></TableHead>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground py-3.5">Employee</TableHead>
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Period</TableHead>
+                <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Gross Pay</TableHead>
+                <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Deductions</TableHead>
+                <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Net Pay</TableHead>
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Status</TableHead>
+                <TableHead className="w-32"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-16">
+                  <div className="h-8 w-8 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                </TableCell></TableRow>
               ) : records?.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">No payslips available</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-16">
+                  <FileText className="h-10 w-10 mx-auto mb-2 text-muted-foreground/20" />
+                  <p className="text-sm font-medium">No payslips available</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">Process a payroll first to generate payslips</p>
+                </TableCell></TableRow>
               ) : (
                 records?.map((r: any) => (
-                  <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
+                  <TableRow key={r.id} className="hover:bg-muted/20 transition-colors group">
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary text-xs font-bold flex-shrink-0">
                           {r.employees?.first_name?.[0]}{r.employees?.last_name?.[0]}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold">{r.employees?.first_name} {r.employees?.last_name}</p>
-                          <p className="text-[10px] text-muted-foreground">{r.employees?.employee_id}</p>
+                          <p className="text-sm font-semibold text-foreground">{r.employees?.first_name} {r.employees?.last_name}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">{r.employees?.employee_id}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm">{r.period}</TableCell>
-                    <TableCell className="text-right font-mono text-sm">₱{Number(r.gross_pay).toLocaleString()}</TableCell>
+                    <TableCell className="text-sm text-foreground">{r.period}</TableCell>
+                    <TableCell className="text-right font-mono text-sm text-foreground">₱{Number(r.gross_pay).toLocaleString()}</TableCell>
                     <TableCell className="text-right font-mono text-sm text-accent">-₱{Number(r.total_deductions).toLocaleString()}</TableCell>
                     <TableCell className="text-right font-mono text-sm font-bold text-primary">₱{Number(r.net_pay).toLocaleString()}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="text-[10px] font-semibold uppercase gap-1">
+                      <Badge variant="secondary" className="text-[10px] font-semibold uppercase gap-1.5 px-2.5">
                         <span className="h-1.5 w-1.5 rounded-full bg-success" />
                         {r.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setViewRecord(r)} title="View">
+                      <div className="flex gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => setViewRecord(r)} title="View Payslip">
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(r)} title="Edit">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => openEdit(r)} title="Edit">
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(r.id)} title="Delete">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg text-destructive hover:text-destructive" onClick={() => setDeleteId(r.id)} title="Delete">
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -319,6 +329,13 @@ export default function Payslips() {
               )}
             </TableBody>
           </Table>
+          {records && records.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
+              <p className="text-[11px] text-muted-foreground">
+                Showing <span className="font-semibold text-foreground">{records.length}</span> payslip records
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
