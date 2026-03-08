@@ -235,42 +235,42 @@ export default function Reports() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-primary/15">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-primary" />
-              <p className="text-xs text-muted-foreground font-medium">Total Disbursed</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="rounded-xl bg-primary/8 p-2.5"><DollarSign className="h-5 w-5 text-primary" /></div>
             </div>
-            <p className="text-2xl font-bold text-primary font-mono">₱{totalDisbursed.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-foreground font-mono">₱{totalDisbursed.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1">Total Disbursed</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-accent/15">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <FileText className="h-4 w-4 text-accent" />
-              <p className="text-xs text-muted-foreground font-medium">Total Deductions</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="rounded-xl bg-accent/8 p-2.5"><FileText className="h-5 w-5 text-accent" /></div>
             </div>
-            <p className="text-2xl font-bold text-accent font-mono">₱{totalDeductions.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-foreground font-mono">₱{totalDeductions.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1">Total Deductions</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-warning/15">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Landmark className="h-4 w-4 text-primary" />
-              <p className="text-xs text-muted-foreground font-medium">Active Loans</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="rounded-xl bg-warning/8 p-2.5"><Landmark className="h-5 w-5 text-warning" /></div>
             </div>
             <p className="text-2xl font-bold text-foreground">{activeLoans.length}</p>
-            <p className="text-[10px] text-muted-foreground">₱{totalRemaining.toLocaleString()} outstanding</p>
+            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1">Active Loans</p>
+            <p className="text-[10px] text-muted-foreground/60">₱{totalRemaining.toLocaleString()} outstanding</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-success/15">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <BarChart3 className="h-4 w-4 text-primary" />
-              <p className="text-xs text-muted-foreground font-medium">Payroll Records</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="rounded-xl bg-success/8 p-2.5"><BarChart3 className="h-5 w-5 text-success" /></div>
             </div>
             <p className="text-2xl font-bold text-foreground">{records?.length || 0}</p>
-            <p className="text-[10px] text-muted-foreground">{totalActive} active employees</p>
+            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1">Payroll Records</p>
+            <p className="text-[10px] text-muted-foreground/60">{totalActive} active employees</p>
           </CardContent>
         </Card>
       </div>
