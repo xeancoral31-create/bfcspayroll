@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useEmployees, usePayrollRecords } from "@/hooks/usePayrollData";
 import { useLoans } from "@/pages/Loans";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Landmark, DollarSign, FileText, Printer, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area } from "recharts";
