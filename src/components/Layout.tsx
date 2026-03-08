@@ -154,14 +154,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <span className="text-[10px] font-semibold text-success">Online</span>
             </div>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                  <Bell className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Notifications</TooltipContent>
-            </Tooltip>
+            <NotificationDropdown />
 
             <Tooltip>
               <TooltipTrigger asChild>
