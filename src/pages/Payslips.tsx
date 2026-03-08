@@ -102,34 +102,146 @@ export default function Payslips() {
   };
 
   const handlePrint = () => {
-    const printContent = receiptRef.current;
-    if (!printContent) return;
-    const win = window.open("", "_blank", "width=600,height=800");
+    if (!viewRecord) return;
+    const ded = typeof viewRecord.deductions === "object" ? viewRecord.deductions : {};
+    const dedItems = [
+      { label: "SSS", value: Number(ded.sss || 0) },
+      { label: "PhilHealth", value: Number(ded.philhealth || 0) },
+      { label: "Pag-IBIG", value: Number(ded.pagibig || 0) },
+      { label: "Withholding Tax", value: Number(ded.withholding_tax || 0) },
+      { label: "Loan Deductions", value: Number(ded.loans || 0) },
+      { label: "Other Deductions", value: Number(ded.other || 0) },
+    ].filter(d => d.value > 0);
+
+    const fmt = (n: number) => `₱${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const dateStr = format(new Date(viewRecord.created_at), "MMMM d, yyyy");
+
+    const win = window.open("", "_blank", "width=700,height=900");
     if (!win) return;
-    win.document.write(`
-      <html><head><title>Payslip - BFCS</title>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif; padding: 24px; color: #1a1e2e; font-size: 13px; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1a5fb4; padding-bottom: 16px; }
-        .header img { height: 60px; margin-bottom: 8px; }
-        .header h1 { font-size: 16px; color: #1a5fb4; }
-        .header p { font-size: 11px; color: #666; }
-        .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #1a5fb4; margin: 16px 0 8px; }
-        table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-        th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; font-size: 12px; }
-        th { background: #f5f5f8; font-weight: 700; font-size: 11px; text-transform: uppercase; color: #444; }
-        .text-right { text-align: right; }
-        .net-pay { background: #1a5fb4; color: white; padding: 12px; border-radius: 8px; text-align: center; margin-top: 16px; }
-        .net-pay .label { font-size: 11px; opacity: 0.8; }
-        .net-pay .amount { font-size: 22px; font-weight: 800; }
-        .footer { text-align: center; margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 10px; color: #999; }
-      </style></head><body>
-      ${printContent.innerHTML}
-      </body></html>
-    `);
+    win.document.write(`<!DOCTYPE html>
+<html><head><title>Payslip — ${viewRecord.employees?.first_name} ${viewRecord.employees?.last_name}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'IBM Plex Sans', sans-serif; color: #1a1e2e; font-size: 12px; line-height: 1.5; background: #fff; }
+  .page { max-width: 680px; margin: 0 auto; padding: 40px 48px; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* Header */
+  .header { display: flex; align-items: center; gap: 16px; padding-bottom: 20px; border-bottom: 3px solid #1a5fb4; margin-bottom: 24px; }
+  .header-logo { width: 64px; height: 64px; object-fit: contain; }
+  .header-text h1 { font-size: 18px; font-weight: 700; color: #1a5fb4; letter-spacing: -0.3px; }
+  .header-text p { font-size: 11px; color: #666; line-height: 1.4; }
+  .doc-title { text-align: center; margin-bottom: 24px; }
+  .doc-title h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: #1a5fb4; background: #eef3fb; display: inline-block; padding: 6px 24px; border-radius: 4px; }
+
+  /* Employee Info Grid */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 32px; margin-bottom: 24px; padding: 16px 20px; background: #f8f9fb; border-radius: 8px; border: 1px solid #e8ecf1; }
+  .info-item { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; }
+  .info-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #888; font-weight: 600; }
+  .info-value { font-size: 12px; font-weight: 600; color: #1a1e2e; text-align: right; }
+
+  /* Tables */
+  .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #1a5fb4; margin-bottom: 8px; padding-left: 2px; }
+  .section-label.orange { color: #c65d12; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #555; padding: 8px 12px; border-bottom: 2px solid #dde2ea; text-align: left; }
+  td { padding: 7px 12px; border-bottom: 1px solid #eef0f4; font-size: 12px; }
+  td.amount { text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+  tr.subtotal td { border-top: 2px solid #1a5fb4; font-weight: 700; font-size: 13px; background: #f0f4fa; }
+  tr.subtotal-ded td { border-top: 2px solid #c65d12; font-weight: 700; font-size: 13px; background: #fef6f0; color: #c65d12; }
+
+  /* Net Pay Box */
+  .net-pay-box { background: linear-gradient(135deg, #1a5fb4, #1449a0); color: #fff; border-radius: 10px; padding: 20px; text-align: center; margin: 24px 0; }
+  .net-pay-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.85; font-weight: 600; }
+  .net-pay-amount { font-size: 32px; font-weight: 800; font-family: 'IBM Plex Mono', monospace; margin-top: 4px; letter-spacing: -0.5px; }
+
+  /* Signatures */
+  .signatures { display: flex; justify-content: space-between; margin-top: 48px; padding: 0 16px; }
+  .sig-block { text-align: center; width: 200px; }
+  .sig-line { border-top: 1.5px solid #333; margin-bottom: 6px; }
+  .sig-name { font-size: 11px; font-weight: 600; }
+  .sig-title { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Footer */
+  .footer { text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
+  .footer p { font-size: 9px; color: #aaa; line-height: 1.6; }
+  .footer .confidential { font-size: 8px; text-transform: uppercase; letter-spacing: 1px; color: #c65d12; font-weight: 600; margin-top: 8px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 24px 32px; }
+    @page { margin: 0.5in; size: letter; }
+  }
+</style></head><body>
+<div class="page">
+  <div class="header">
+    <img src="${window.location.origin}/placeholder.svg" class="header-logo" alt="BFCS Logo" onerror="this.style.display='none'" />
+    <div class="header-text">
+      <h1>Butuan Faith Christian School</h1>
+      <p>Butuan City, Agusan del Norte, Philippines<br/>Finance & Payroll Department</p>
+    </div>
+  </div>
+
+  <div class="doc-title">
+    <h2>Employee Payslip</h2>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-item"><span class="info-label">Employee Name</span><span class="info-value">${viewRecord.employees?.first_name} ${viewRecord.employees?.last_name}</span></div>
+    <div class="info-item"><span class="info-label">Employee ID</span><span class="info-value mono">${viewRecord.employees?.employee_id}</span></div>
+    <div class="info-item"><span class="info-label">Position</span><span class="info-value">${viewRecord.employees?.position || "—"}</span></div>
+    <div class="info-item"><span class="info-label">Department</span><span class="info-value">${viewRecord.employees?.department || "—"}</span></div>
+    <div class="info-item"><span class="info-label">Pay Period</span><span class="info-value">${viewRecord.period}</span></div>
+    <div class="info-item"><span class="info-label">Date Issued</span><span class="info-value">${dateStr}</span></div>
+  </div>
+
+  <div class="section-label">Earnings</div>
+  <table>
+    <thead><tr><th>Description</th><th style="text-align:right">Amount</th></tr></thead>
+    <tbody>
+      <tr><td>Basic Salary</td><td class="amount">${fmt(Number(viewRecord.basic_salary))}</td></tr>
+      <tr><td>Overtime Pay</td><td class="amount">${fmt(Number(viewRecord.overtime))}</td></tr>
+      <tr><td>Allowances</td><td class="amount">${fmt(Number(viewRecord.allowances))}</td></tr>
+      <tr class="subtotal"><td>Gross Pay</td><td class="amount">${fmt(Number(viewRecord.gross_pay))}</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-label orange">Deductions</div>
+  <table>
+    <thead><tr><th>Description</th><th style="text-align:right">Amount</th></tr></thead>
+    <tbody>
+      ${dedItems.map(d => `<tr><td>${d.label}</td><td class="amount">${fmt(d.value)}</td></tr>`).join("")}
+      <tr class="subtotal-ded"><td>Total Deductions</td><td class="amount">-${fmt(Number(viewRecord.total_deductions))}</td></tr>
+    </tbody>
+  </table>
+
+  <div class="net-pay-box">
+    <div class="net-pay-label">Net Pay</div>
+    <div class="net-pay-amount">${fmt(Number(viewRecord.net_pay))}</div>
+  </div>
+
+  <div class="signatures">
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-name">${viewRecord.employees?.first_name} ${viewRecord.employees?.last_name}</div>
+      <div class="sig-title">Employee</div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-name">Finance Officer</div>
+      <div class="sig-title">Authorized Signatory</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>This payslip was generated by the BFCS Payroll System on ${dateStr}.<br/>For questions or discrepancies, please contact the Finance Office.</p>
+    <p class="confidential">Confidential — For Authorized Personnel Only</p>
+  </div>
+</div>
+</body></html>`);
     win.document.close();
-    win.print();
+    setTimeout(() => win.print(), 300);
   };
 
   const deductions = viewRecord ? (typeof viewRecord.deductions === "object" ? viewRecord.deductions : {}) : {};
