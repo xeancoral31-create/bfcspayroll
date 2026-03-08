@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Landmark, Plus, Pencil, Trash2, Search, DollarSign, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { createNotification } from "@/hooks/useNotifications";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface LoanForm {
