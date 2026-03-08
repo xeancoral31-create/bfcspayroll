@@ -259,7 +259,6 @@ export default function Employees() {
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-foreground">{e.first_name} {e.last_name}</p>
-                          <p className="text-[10px] text-muted-foreground font-mono">{e.employee_id}</p>
                         </div>
                       </div>
                     </TableCell>
