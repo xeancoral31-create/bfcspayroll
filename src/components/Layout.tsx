@@ -18,6 +18,7 @@ const navItems = [
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { theme, toggle } = useTheme();
 
   const currentPage = navItems.find((n) => n.to === location.pathname);
 
