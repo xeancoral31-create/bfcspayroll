@@ -18,6 +18,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export default function Payroll() {
   const { data: employees } = useEmployees();
   const { processPayroll } = usePayrollActions();
+  const { data: allRecords } = usePayrollRecords();
   const queryClient = useQueryClient();
   const activeEmployees = employees?.filter((e) => e.status === "active") || [];
 
