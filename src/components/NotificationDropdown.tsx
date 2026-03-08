@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Bell, Check, Trash2, Clock, AlertCircle, Info, CheckCircle2, RotateCcw, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   Popover,
   PopoverContent,
@@ -60,6 +61,7 @@ export default function NotificationDropdown() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showTrash, setShowTrash] = useState(false);
   const [trashedItems, setTrashedItems] = useState<Notification[]>([]);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -113,6 +115,7 @@ export default function NotificationDropdown() {
   const handleDeleteAllTrashed = useCallback(() => {
     setTrashedItems([]);
     setShowTrash(false);
+    setConfirmDeleteAll(false);
   }, []);
 
   // Restore all trashed
@@ -188,7 +191,7 @@ export default function NotificationDropdown() {
                       variant="ghost"
                       size="sm"
                       className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                      onClick={handleDeleteAllTrashed}
+                      onClick={() => setConfirmDeleteAll(true)}
                     >
                       <Trash2 className="h-3 w-3 mr-1" />
                       Delete all
@@ -417,6 +420,23 @@ export default function NotificationDropdown() {
           )}
         </PopoverContent>
       </Popover>
+
+      <AlertDialog open={confirmDeleteAll} onOpenChange={setConfirmDeleteAll}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base">Delete All from Trash</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete all {trashedItems.length} notification{trashedItems.length !== 1 ? "s" : ""} from trash? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllTrashed} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
