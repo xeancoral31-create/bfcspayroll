@@ -5,7 +5,7 @@ import bfcsLogo from "@/assets/bfcs-logo.png";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/employees", label: "Cashier Staff", icon: Users },
+  { to: "/employees", label: "Employees", icon: Users },
   { to: "/payroll", label: "Run Payroll", icon: Calculator },
   { to: "/payslips", label: "Payslips", icon: FileText },
   { to: "/reports", label: "Reports", icon: BarChart3 },

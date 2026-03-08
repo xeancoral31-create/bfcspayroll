@@ -95,7 +95,7 @@ export default function Employees() {
             <Users className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-lg font-extrabold text-foreground">Cashier Staff</h1>
+            <h1 className="text-lg font-extrabold text-foreground">Employees</h1>
             <p className="text-xs text-muted-foreground">{employees?.length || 0} employees registered</p>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function Employees() {
               {isLoading ? (
                 <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
               ) : filtered?.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">No cashier staff found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">No employees found</TableCell></TableRow>
               ) : (
                 filtered?.map((e) => (
                   <TableRow key={e.id} className="hover:bg-muted/30 transition-colors">
