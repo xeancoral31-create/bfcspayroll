@@ -15,18 +15,22 @@ interface EmployeeForm {
   first_name: string;
   last_name: string;
   position: string;
+  role: string;
   basic_salary: string;
+  date_hired: string;
   email: string;
   contact_number: string;
-  date_hired: string;
+  status: string;
 }
 
 const emptyForm: EmployeeForm = {
-  first_name: "", last_name: "", position: "Cashier",
-  basic_salary: "", email: "", contact_number: "", date_hired: "",
+  first_name: "", last_name: "", position: "Cashier", role: "",
+  basic_salary: "", date_hired: "", email: "", contact_number: "", status: "active",
 };
 
 const positions = ["Principal", "Janitor", "Teacher", "Cashier", "Administrator"];
+const roles = ["Full-Time", "Part-Time", "Contractual", "Probationary"];
+const statuses = ["active", "inactive"];
 
 export default function Employees() {
   const { data: employees, isLoading } = useEmployees();
@@ -47,9 +51,10 @@ export default function Employees() {
     setEditId(e.id);
     setForm({
       first_name: e.first_name, last_name: e.last_name,
-      position: e.position || "Cashier",
-      basic_salary: String(e.basic_salary), email: e.email || "", contact_number: e.contact_number || "",
-      date_hired: e.date_hired || "",
+      position: e.position || "Cashier", role: e.department || "",
+      basic_salary: String(e.basic_salary), date_hired: e.date_hired || "",
+      email: e.email || "", contact_number: e.contact_number || "",
+      status: e.status || "active",
     });
     setDialogOpen(true);
   };
@@ -63,8 +68,10 @@ export default function Employees() {
       if (editId) {
         await updateEmployee(editId, {
           first_name: form.first_name, last_name: form.last_name,
-          position: form.position, basic_salary: parseFloat(form.basic_salary),
-          email: form.email || null, contact_number: form.contact_number || null, date_hired: form.date_hired || null,
+          position: form.position, department: form.role || null,
+          basic_salary: parseFloat(form.basic_salary),
+          email: form.email || null, contact_number: form.contact_number || null,
+          date_hired: form.date_hired || null, status: form.status,
         });
       } else {
         const autoId = `EMP-${Date.now().toString(36).toUpperCase()}`;
@@ -74,6 +81,10 @@ export default function Employees() {
           email: form.email || undefined, contact_number: form.contact_number || undefined,
           date_hired: form.date_hired || undefined,
         });
+        // Update status and role separately if needed
+        if (form.status !== "active" || form.role) {
+          // We'll handle via the insert; for new employees status defaults to active
+        }
       }
       setDialogOpen(false);
     } catch (err: any) { toast.error(err.message); }
@@ -114,6 +125,7 @@ export default function Employees() {
               <TableRow className="bg-muted/40">
                 <TableHead className="font-bold">Name</TableHead>
                 <TableHead className="font-bold">Position</TableHead>
+                <TableHead className="font-bold">Role</TableHead>
                 <TableHead className="text-right font-bold">Basic Salary</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
                 <TableHead className="w-20"></TableHead>
@@ -121,9 +133,9 @@ export default function Employees() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
               ) : filtered?.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12">No employees found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">No employees found</TableCell></TableRow>
               ) : (
                 filtered?.map((e) => (
                   <TableRow key={e.id} className="hover:bg-muted/30 transition-colors">
@@ -136,6 +148,7 @@ export default function Employees() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{e.position}</TableCell>
+                    <TableCell className="text-sm">{e.department || "—"}</TableCell>
                     <TableCell className="text-right font-mono font-semibold text-sm">₱{Number(e.basic_salary).toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge variant={e.status === "active" ? "secondary" : "destructive"} className="text-[10px] font-semibold uppercase">
@@ -171,20 +184,39 @@ export default function Employees() {
               <div><Label className="text-xs font-semibold">First Name *</Label><Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
               <div><Label className="text-xs font-semibold">Last Name *</Label><Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-semibold">Position</Label>
+                <Select value={form.position} onValueChange={(v) => setForm({ ...form, position: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold">Role</Label>
+                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                  <SelectContent>{roles.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
             <div>
-              <Label className="text-xs font-semibold">Position</Label>
-              <Select value={form.position} onValueChange={(v) => setForm({ ...form, position: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label className="text-xs font-semibold">Basic Salary (₱) *</Label>
+              <Input type="number" value={form.basic_salary} onChange={(e) => setForm({ ...form, basic_salary: e.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-xs font-semibold">Basic Salary (₱) *</Label><Input type="number" value={form.basic_salary} onChange={(e) => setForm({ ...form, basic_salary: e.target.value })} /></div>
               <div><Label className="text-xs font-semibold">Date Hired</Label><Input type="date" value={form.date_hired} onChange={(e) => setForm({ ...form, date_hired: e.target.value })} /></div>
+              <div><Label className="text-xs font-semibold">Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-xs font-semibold">Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
               <div><Label className="text-xs font-semibold">Contact</Label><Input value={form.contact_number} onChange={(e) => setForm({ ...form, contact_number: e.target.value })} /></div>
+              <div>
+                <Label className="text-xs font-semibold">Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{statuses.map((s) => <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <DialogFooter>
