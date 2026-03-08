@@ -62,12 +62,12 @@ export default function Dashboard() {
       color: "bg-warning/10 text-warning",
     },
     {
-      label: "This Month",
-      value: `${thisMonth} processed`,
-      icon: Calendar,
-      change: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-      trend: "up" as const,
-      color: "bg-accent/10 text-accent",
+      label: "Active Loans",
+      value: `${activeLoans.length}`,
+      icon: Landmark,
+      change: `₱${totalLoanBalance.toLocaleString()} outstanding`,
+      trend: activeLoans.length > 0 ? "up" as const : "neutral" as const,
+      color: "bg-destructive/10 text-destructive",
     },
   ];
 
