@@ -42,6 +42,8 @@ export default function Employees() {
   const [search, setSearch] = useState("");
   const [filterPosition, setFilterPosition] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [viewLoanId, setViewLoanId] = useState<string | null>(null);
+  const { data: allLoans } = useLoans();
 
   const filtered = employees?.filter((e) => {
     const matchesSearch = `${e.first_name} ${e.last_name}`.toLowerCase().includes(search.toLowerCase());
