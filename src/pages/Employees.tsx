@@ -65,7 +65,7 @@ export default function Employees() {
     setEditId(e.id);
     setForm({
       first_name: e.first_name, last_name: e.last_name,
-      position: e.position || "Cashier", department: e.department || "",
+      position: e.position || "Cashier",
       basic_salary: String(e.basic_salary), date_hired: e.date_hired || "",
       email: e.email || "", contact_number: e.contact_number || "",
       status: e.status || "active",
