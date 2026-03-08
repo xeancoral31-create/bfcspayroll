@@ -12,11 +12,9 @@ import { Users, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface EmployeeForm {
-  employee_id: string;
   first_name: string;
   last_name: string;
   position: string;
-  
   basic_salary: string;
   email: string;
   contact_number: string;
@@ -24,7 +22,7 @@ interface EmployeeForm {
 }
 
 const emptyForm: EmployeeForm = {
-  employee_id: "", first_name: "", last_name: "", position: "Cashier",
+  first_name: "", last_name: "", position: "Cashier",
   basic_salary: "", email: "", contact_number: "", date_hired: "",
 };
 
@@ -40,7 +38,7 @@ export default function Employees() {
   const [search, setSearch] = useState("");
 
   const filtered = employees?.filter((e) =>
-    `${e.first_name} ${e.last_name} ${e.employee_id}`.toLowerCase().includes(search.toLowerCase())
+    `${e.first_name} ${e.last_name}`.toLowerCase().includes(search.toLowerCase())
   );
 
   const openAdd = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
@@ -48,7 +46,7 @@ export default function Employees() {
   const openEdit = (e: any) => {
     setEditId(e.id);
     setForm({
-      employee_id: e.employee_id, first_name: e.first_name, last_name: e.last_name,
+      first_name: e.first_name, last_name: e.last_name,
       position: e.position || "Cashier",
       basic_salary: String(e.basic_salary), email: e.email || "", contact_number: e.contact_number || "",
       date_hired: e.date_hired || "",
@@ -57,20 +55,21 @@ export default function Employees() {
   };
 
   const handleSave = async () => {
-    if (!form.employee_id || !form.first_name || !form.last_name || !form.basic_salary) {
+    if (!form.first_name || !form.last_name || !form.basic_salary) {
       toast.error("Please fill in all required fields."); return;
     }
     setSaving(true);
     try {
       if (editId) {
         await updateEmployee(editId, {
-          employee_id: form.employee_id, first_name: form.first_name, last_name: form.last_name,
+          first_name: form.first_name, last_name: form.last_name,
           position: form.position, basic_salary: parseFloat(form.basic_salary),
           email: form.email || null, contact_number: form.contact_number || null, date_hired: form.date_hired || null,
         });
       } else {
+        const autoId = `EMP-${Date.now().toString(36).toUpperCase()}`;
         await addEmployee({
-          employee_id: form.employee_id, first_name: form.first_name, last_name: form.last_name,
+          employee_id: autoId, first_name: form.first_name, last_name: form.last_name,
           position: form.position, basic_salary: parseFloat(form.basic_salary),
           email: form.email || undefined, contact_number: form.contact_number || undefined,
           date_hired: form.date_hired || undefined,
@@ -105,7 +104,7 @@ export default function Employees() {
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search staff..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        <Input placeholder="Search employees..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
 
       <Card className="border-border/50 overflow-hidden">
@@ -168,8 +167,7 @@ export default function Employees() {
             <DialogTitle className="font-extrabold">{editId ? "Edit Employee" : "Add New Employee"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3 py-2">
-            <div className="grid grid-cols-3 gap-3">
-              <div><Label className="text-xs font-semibold">Employee ID *</Label><Input value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} placeholder="EMP-001" /></div>
+            <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs font-semibold">First Name *</Label><Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
               <div><Label className="text-xs font-semibold">Last Name *</Label><Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
             </div>
