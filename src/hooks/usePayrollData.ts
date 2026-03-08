@@ -42,11 +42,12 @@ export function usePayrollActions() {
     email?: string;
     contact_number?: string;
     date_hired?: string;
+    status?: string;
   }) => {
     const { error } = await supabase.from("employees").insert({
       ...employee,
-      employment_type: "Cashier",
-      status: "active",
+      employment_type: employee.position || "Cashier",
+      status: employee.status || "active",
     });
     if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ["employees"] });
