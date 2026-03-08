@@ -130,7 +130,6 @@ export default function Employees() {
               ) : (
                 filtered?.map((e) => (
                   <TableRow key={e.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="font-mono text-xs font-semibold text-primary">{e.employee_id}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
