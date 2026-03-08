@@ -332,13 +332,6 @@ export default function Employees() {
                   <SelectContent>{positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className="text-xs font-semibold">Department</Label>
-                <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>
-                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{departments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
