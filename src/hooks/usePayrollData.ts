@@ -45,8 +45,8 @@ export function usePayrollActions() {
   }) => {
     const { error } = await supabase.from("employees").insert({
       ...employee,
-      employment_type: "Cashier",
-      status: "active",
+      employment_type: employee.position || "Cashier",
+      status: employee.status || "active",
     });
     if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ["employees"] });
