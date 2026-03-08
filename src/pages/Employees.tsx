@@ -265,7 +265,6 @@ export default function Employees() {
                     </TableCell>
                     <TableCell>
                       <p className="text-sm text-foreground">{e.position}</p>
-                      <p className="text-[10px] text-muted-foreground">{e.department || "—"}</p>
                     </TableCell>
                     <TableCell className="text-right font-mono font-semibold text-sm text-foreground">₱{Number(e.basic_salary).toLocaleString()}</TableCell>
                     <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">{e.date_hired || "—"}</TableCell>
