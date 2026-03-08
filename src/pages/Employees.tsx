@@ -182,6 +182,9 @@ export default function Employees() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setViewLoanId(e.id)} title="View Loans">
+                          <Landmark className="h-3.5 w-3.5" />
+                        </Button>
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(e)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
