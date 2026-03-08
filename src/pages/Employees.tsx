@@ -227,22 +227,23 @@ export default function Employees() {
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground py-3.5">Employee</TableHead>
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Position</TableHead>
                 <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Basic Salary</TableHead>
-                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground hidden lg:table-cell">Date Hired</TableHead>
-                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground hidden xl:table-cell">Contact</TableHead>
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Date Hired</TableHead>
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Email</TableHead>
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Contact Number</TableHead>
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Status</TableHead>
                 <TableHead className="w-28"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-16">
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-16">
                   <div className="flex flex-col items-center gap-2">
                     <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                     <p className="text-sm">Loading employees...</p>
                   </div>
                 </TableCell></TableRow>
               ) : filtered?.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-16">
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-16">
                   <div className="flex flex-col items-center gap-2">
                     <Users className="h-10 w-10 text-muted-foreground/20" />
                     <p className="text-sm font-medium">No employees found</p>
@@ -266,11 +267,9 @@ export default function Employees() {
                       <p className="text-sm text-foreground">{e.position}</p>
                     </TableCell>
                     <TableCell className="text-right font-mono font-semibold text-sm text-foreground">₱{Number(e.basic_salary).toLocaleString()}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">{e.date_hired || "—"}</TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <p className="text-xs text-muted-foreground">{e.email || "—"}</p>
-                      <p className="text-[10px] text-muted-foreground/60">{e.contact_number || ""}</p>
-                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{e.date_hired || "—"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{e.email || "—"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{e.contact_number || "—"}</TableCell>
                     <TableCell>
                       <Badge
                         variant={e.status === "active" ? "secondary" : "destructive"}
