@@ -214,23 +214,21 @@ export default function Reports() {
   };
 
   return (
-    <div className="space-y-5 animate-fade-in" ref={reportRef}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2.5">
-            <BarChart3 className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-foreground">Payroll Reports</h1>
-            <p className="text-xs text-muted-foreground">Analytics & summaries for BFCS payroll</p>
-          </div>
+    <div className="space-y-6" ref={reportRef}>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">Reports & Analytics</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Comprehensive payroll analytics, deduction summaries, and financial insights.
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportCSV} className="font-semibold gap-2 text-sm">
-            <Download className="h-4 w-4" /> Export CSV
+          <Button variant="outline" size="sm" onClick={handleExportCSV} className="font-semibold gap-2 text-xs">
+            <Download className="h-3.5 w-3.5" /> Export CSV
           </Button>
-          <Button onClick={handlePrint} className="font-semibold gap-2 text-sm">
-            <Printer className="h-4 w-4" /> Print Report
+          <Button size="sm" onClick={handlePrint} className="font-semibold gap-2 text-xs">
+            <Printer className="h-3.5 w-3.5" /> Print Report
           </Button>
         </div>
       </div>
