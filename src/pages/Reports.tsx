@@ -128,24 +128,6 @@ export default function Reports() {
       <h1>BFCS Payroll Reports</h1>
       <p class="subtitle">Butuan Faith Christian School — Generated on ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
       
-      <div class="stats">
-        <div class="stat-card">
-          <div class="stat-value mono">₱${totalDisbursed.toLocaleString()}</div>
-          <div class="stat-label">Total Disbursed</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value mono">₱${totalDeductions.toLocaleString()}</div>
-          <div class="stat-label">Total Deductions</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${activeLoans.length}</div>
-          <div class="stat-label">Active Loans (₱${totalRemaining.toLocaleString()} outstanding)</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${records?.length || 0}</div>
-          <div class="stat-label">Payroll Records (${totalActive} active employees)</div>
-        </div>
-      </div>
 
       <h2>Deductions Breakdown</h2>
       <table>
