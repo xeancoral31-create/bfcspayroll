@@ -132,11 +132,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5">
               <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
               <span className="text-[11px] font-medium text-muted-foreground">System Online</span>
             </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggle}
+                  className="h-9 w-9"
+                  aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+                >
+                  {theme === "light" ? (
+                    <Moon className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Sun className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {theme === "light" ? "Dark mode" : "Light mode"}
+              </TooltipContent>
+            </Tooltip>
             <img
               src={bfcsLogo}
               alt="BFCS"
