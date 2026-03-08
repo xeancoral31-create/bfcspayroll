@@ -95,7 +95,7 @@ export default function Employees() {
             <Users className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-lg font-extrabold text-foreground">Cashier Staff</h1>
+            <h1 className="text-lg font-extrabold text-foreground">Employees</h1>
             <p className="text-xs text-muted-foreground">{employees?.length || 0} employees registered</p>
           </div>
         </div>
