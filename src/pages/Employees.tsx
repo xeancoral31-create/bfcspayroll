@@ -267,11 +267,9 @@ export default function Employees() {
                       <p className="text-sm text-foreground">{e.position}</p>
                     </TableCell>
                     <TableCell className="text-right font-mono font-semibold text-sm text-foreground">₱{Number(e.basic_salary).toLocaleString()}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">{e.date_hired || "—"}</TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <p className="text-xs text-muted-foreground">{e.email || "—"}</p>
-                      <p className="text-[10px] text-muted-foreground/60">{e.contact_number || ""}</p>
-                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{e.date_hired || "—"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{e.email || "—"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{e.contact_number || "—"}</TableCell>
                     <TableCell>
                       <Badge
                         variant={e.status === "active" ? "secondary" : "destructive"}
