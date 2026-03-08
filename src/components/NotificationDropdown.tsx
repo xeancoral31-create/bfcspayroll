@@ -420,6 +420,23 @@ export default function NotificationDropdown() {
           )}
         </PopoverContent>
       </Popover>
+
+      <AlertDialog open={confirmDeleteAll} onOpenChange={setConfirmDeleteAll}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base">Delete All from Trash</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete all {trashedItems.length} notification{trashedItems.length !== 1 ? "s" : ""} from trash? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllTrashed} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
