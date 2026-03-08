@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Calculator, FileText, BarChart3, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, Calculator, FileText, BarChart3, Menu, X, Landmark } from "lucide-react";
 import { useState } from "react";
 import bfcsLogo from "@/assets/bfcs-logo.png";
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/employees", label: "Employees", icon: Users },
   { to: "/payroll", label: "Run Payroll", icon: Calculator },
   { to: "/payslips", label: "Payslips", icon: FileText },
+  { to: "/loans", label: "Loans", icon: Landmark },
   { to: "/reports", label: "Reports", icon: BarChart3 },
 ];
 

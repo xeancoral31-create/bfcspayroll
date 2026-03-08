@@ -90,9 +90,12 @@ export default function Employees() {
     setSaving(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Remove this employee?")) return;
-    try { await deleteEmployee(id); } catch (err: any) { toast.error(err.message); }
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try { await deleteEmployee(deleteId); } catch (err: any) { toast.error(err.message); }
+    setDeleteId(null);
   };
 
   return (
